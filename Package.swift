@@ -13,7 +13,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/tuist/tuist", revision: "5749fbebf26eae2fb8b5ffff03e1af3593a71c34"), // a commit where `Plugins 2.0` was merged into `release/3.0` branch
+        .package(url: "https://github.com/tuist/tuist", branch: "release/3.0"), // TODO: replace "revision" with requirement for released version when `3.0` be released
+        .package(url: "https://github.com/realm/SwiftLint", .upToNextMinor(from: "0.45.0")),
     ],
     targets: [
         .executableTarget(
