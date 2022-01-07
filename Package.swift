@@ -4,12 +4,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-plugin-swiftlint",
+    name: "tuist-plugin-swiftlint",
     platforms: [.macOS(.v10_15)],
     products: [
         .executable(
-            name: "swift-plugin-swiftlint",
-            targets: ["swift-plugin-swiftlint"]
+            name: "tuist-plugin-swiftlint",
+            targets: ["tuist-plugin-swiftlint"]
         )
     ],
     dependencies: [
@@ -18,15 +18,16 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "swift-plugin-swiftlint",
+            name: "tuist-plugin-swiftlint",
             dependencies: [
                 .product(name: "ProjectAutomation", package: "tuist"),
+                .product(name: "SwiftLintFramework", package: "SwiftLint"),
             ]
         ),
         .testTarget(
-            name: "swift-plugin-swiftlintTests",
+            name: "tuist-plugin-swiftlintTests",
             dependencies: [
-                "swift-plugin-swiftlint"
+                "tuist-plugin-swiftlint"
             ]
         ),
     ]
