@@ -1,5 +1,4 @@
 import Foundation
-import SwiftLintFramework
 
 public final class LintService {
     public init() {}
