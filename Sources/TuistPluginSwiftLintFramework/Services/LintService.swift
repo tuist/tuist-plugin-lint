@@ -15,6 +15,7 @@ public final class LintService {
         do {
             let graph: Graph = try {
                 if let path = path {
+                    print("path: " + path)
                     return try Tuist.graph(at: path)
                 } else {
                     return try Tuist.graph()
