@@ -8,26 +8,34 @@ let package = Package(
     platforms: [.macOS(.v10_15)],
     products: [
         .executable(
-            name: "tuist-plugin-swiftlint",
-            targets: ["tuist-plugin-swiftlint"]
+            name: "TuistPluginSwiftLint",
+            targets: ["TuistPluginSwiftLint"]
         )
     ],
     dependencies: [
         .package(url: "https://github.com/tuist/tuist", branch: "release/3.0"), // TODO: replace "revision" with requirement for released version when `3.0` be released
-        .package(url: "https://github.com/realm/SwiftLint", .upToNextMinor(from: "0.45.0")),
+        .package(url: "https://github.com/realm/SwiftLint", .exact("0.45.1")),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "1.0.0")),
     ],
     targets: [
         .executableTarget(
-            name: "tuist-plugin-swiftlint",
+            name: "TuistPluginSwiftLint",
+            dependencies: [
+                "TuistPluginSwiftLintFramework",
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]
+        ),
+        .target(
+            name: "TuistPluginSwiftLintFramework",
             dependencies: [
                 .product(name: "ProjectAutomation", package: "tuist"),
                 .product(name: "SwiftLintFramework", package: "SwiftLint"),
             ]
         ),
         .testTarget(
-            name: "tuist-plugin-swiftlintTests",
+            name: "TuistPluginSwiftLintFrameworkTests",
             dependencies: [
-                "tuist-plugin-swiftlint"
+                "TuistPluginSwiftLintFramework",
             ]
         ),
     ]
