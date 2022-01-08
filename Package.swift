@@ -8,7 +8,7 @@ let package = Package(
     platforms: [.macOS(.v10_15)],
     products: [
         .executable(
-            name: "TuistPluginSwiftLint",
+            name: "plugin-swiftlint",
             targets: ["TuistPluginSwiftLint"]
         )
     ],
