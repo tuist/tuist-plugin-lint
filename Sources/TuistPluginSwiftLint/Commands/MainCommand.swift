@@ -6,8 +6,9 @@ struct MainCommand: ParsableCommand {
         commandName: "swiftlint",
         abstract: "A plugin that extends Tuist with linting code using SwiftLint.",
         subcommands: [
-            LintCommand.self,
-            VersionCommand.self
+            LintCommand.self, // lints code
+            VersionCommand.self, // prints version of the plugin
+            VersionSwiftLintCommand.self, // prints version of SwiftLint
         ]
     )
 }
