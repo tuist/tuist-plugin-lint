@@ -29,7 +29,7 @@ public final class LintService {
         self.swiftLintAdapter = swiftLintAdapter
     }
     
-    // TODO: add unit tests
+    #warning("TODO: add unit tests")
     /// The entry point of the service. Invoke it to start linting.
     /// - Parameters:
     ///   - path: The path to the directory that contains the workspace or project whose code will be linted.
@@ -41,7 +41,7 @@ public final class LintService {
         swiftLintAdapter.lint(sources: sourcesToLint)
     }
     
-    // TODO: add unit tests
+    #warning("TODO: add unit tests")
     private func getGraph(at path: String?) throws -> Graph {
         do {
             if let path = path {
@@ -54,7 +54,7 @@ public final class LintService {
         }
     }
     
-    // TODO: add unit tests
+    #warning("TODO: add unit tests")
     private func getSourcesToLint(in graph: Graph, targetName: String?) throws -> [String] {
         if let targetName = targetName {
             guard let target = graph.allTargets.first(where: { $0.name == targetName }) else {
@@ -68,7 +68,7 @@ public final class LintService {
     }
 }
 
-// TODO: add unit tests
+#warning("TODO: add unit tests")
 private extension Graph {
     /// Returns a list of targets that are included into the graph.
     var allTargets: [Target] {

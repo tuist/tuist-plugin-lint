@@ -1,6 +1,9 @@
 import Foundation
 import SwiftLintFramework
 
+#warning("TODO: needs documentation")
+#warning("TODO: unit tests")
+
 public protocol SwiftLintAdapting {
     func lint(sources: [String])
 }
@@ -9,32 +12,12 @@ public final class SwiftLintAdapter: SwiftLintAdapting {
     public init() { }
     
     public func lint(sources: [String]) {
-        let options = LintOrAnalyzeOptions(
-            mode: .lint,
-            paths: sources,
-            useSTDIN: false,
-            configurationFiles: [], // TODO: configuration files
-            strict: false, // TODO: configurable, connected to `lenient`
-            lenient: false, // TODO: configurable, connected to `strict`
-            forceExclude: false,
-            useExcludingByPrefix: false,
-            useScriptInputFiles: false,
-            benchmark: false,
-            reporter: nil,
-            quiet: false, // TODO: configurable
-            cachePath: nil,
-            ignoreCache: false,
-            enableAllRules: false,
-            autocorrect: false, // TODO: configurable
-            format: false, // TODO: configurable
-            compilerLogPath: nil,
-            compileCommands: nil
-        )
+        let options = LintOptions.create(sources: sources)
         
         SwiftLintAdapter.lint(options: options)
     }
     
-    private static func lint(options: LintOrAnalyzeOptions) -> Result<(), SwiftLintError> {
+    private static func lint(options: LintOptions) -> Result<(), SwiftLintError> {
         let builder = LintOrAnalyzeResultBuilder(options)
         
         return collectViolations(builder: builder)
@@ -67,7 +50,7 @@ public final class SwiftLintAdapter: SwiftLintAdapting {
             
     }
     
-    private static func applyLeniency(options: LintOrAnalyzeOptions, violations: [StyleViolation]) -> [StyleViolation] {
+    private static func applyLeniency(options: LintOptions, violations: [StyleViolation]) -> [StyleViolation] {
         switch (options.lenient, options.strict) {
         case (false, false):
             return violations
@@ -192,7 +175,7 @@ struct LintableFilesVisitor {
     }
 
     static func create(
-        _ options: LintOrAnalyzeOptions,
+        _ options: LintOptions,
         cache: LinterCache?,
         allowZeroLintableFiles: Bool,
         block: @escaping (CollectedLinter) -> Void
@@ -217,54 +200,6 @@ struct LintableFilesVisitor {
     }
 }
 
-enum LintOrAnalyzeMode {
-    case lint
-
-    var imperative: String {
-        switch self {
-        case .lint:
-            return "lint"
-        }
-    }
-
-    var verb: String {
-        switch self {
-        case .lint:
-            return "linting"
-        }
-    }
-}
-
-struct LintOrAnalyzeOptions {
-    let mode: LintOrAnalyzeMode
-    let paths: [String]
-    let useSTDIN: Bool
-    let configurationFiles: [String]
-    let strict: Bool
-    let lenient: Bool
-    let forceExclude: Bool
-    let useExcludingByPrefix: Bool
-    let useScriptInputFiles: Bool
-    let benchmark: Bool
-    let reporter: String?
-    let quiet: Bool
-    let cachePath: String?
-    let ignoreCache: Bool
-    let enableAllRules: Bool
-    let autocorrect: Bool
-    let format: Bool
-    let compilerLogPath: String?
-    let compileCommands: String?
-    
-    var verb: String {
-        if autocorrect {
-            return "correcting"
-        } else {
-            return mode.verb
-        }
-    }
-}
-
 private func resolveParamsFiles(args: [String]) -> [String] {
     return args.reduce(into: []) { (allArgs: inout [String], arg: String) -> Void in
         if arg.hasPrefix("@"), let contents = try? String(contentsOfFile: String(arg.dropFirst())) {
@@ -281,9 +216,9 @@ private class LintOrAnalyzeResultBuilder {
     let configuration: Configuration
     let reporter: Reporter.Type
     let cache: LinterCache?
-    let options: LintOrAnalyzeOptions
+    let options: LintOptions
 
-    init(_ options: LintOrAnalyzeOptions) {
+    init(_ options: LintOptions) {
         let config = Configuration(options: options)
         
         configuration = Configuration(options: options)
@@ -294,7 +229,7 @@ private class LintOrAnalyzeResultBuilder {
 }
 
 extension Configuration {
-    init(options: LintOrAnalyzeOptions) {
+    init(options: LintOptions) {
         self.init(
             configurationFiles: options.configurationFiles,
             enableAllRules: options.enableAllRules,
@@ -303,7 +238,7 @@ extension Configuration {
     }
     
     func visitLintableFiles(
-        options: LintOrAnalyzeOptions,
+        options: LintOptions,
         cache: LinterCache? = nil,
         storage: RuleStorage,
         visitorBlock: @escaping (CollectedLinter) -> Void
