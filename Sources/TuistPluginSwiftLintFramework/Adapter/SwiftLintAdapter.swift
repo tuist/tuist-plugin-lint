@@ -139,76 +139,7 @@ public final class SwiftLintAdapter: SwiftLintAdapting {
 
 /// MARK: - Helper
 
-typealias File = String
-typealias Arguments = [String]
-
 private let indexIncrementerQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.indexIncrementer")
-
-struct LintableFilesVisitor {
-    let paths: [String]
-    let action: String
-    let useSTDIN: Bool
-    let quiet: Bool
-    let useScriptInputFiles: Bool
-    let forceExclude: Bool
-    let useExcludingByPrefix: Bool
-    let cache: LinterCache?
-    let parallel: Bool
-    let allowZeroLintableFiles: Bool
-    let block: (CollectedLinter) -> Void
-
-    init(paths: [String], action: String, useSTDIN: Bool,
-         quiet: Bool, useScriptInputFiles: Bool, forceExclude: Bool, useExcludingByPrefix: Bool,
-         cache: LinterCache?, parallel: Bool,
-         allowZeroLintableFiles: Bool, block: @escaping (CollectedLinter) -> Void) {
-        self.paths = resolveParamsFiles(args: paths)
-        self.action = action
-        self.useSTDIN = useSTDIN
-        self.quiet = quiet
-        self.useScriptInputFiles = useScriptInputFiles
-        self.forceExclude = forceExclude
-        self.useExcludingByPrefix = useExcludingByPrefix
-        self.cache = cache
-        self.parallel = parallel
-        self.allowZeroLintableFiles = allowZeroLintableFiles
-        self.block = block
-    }
-
-    static func create(
-        _ options: LintOptions,
-        cache: LinterCache?,
-        allowZeroLintableFiles: Bool,
-        block: @escaping (CollectedLinter) -> Void
-    ) -> Result<LintableFilesVisitor, SwiftLintError> {
-        let visitor = LintableFilesVisitor(paths: options.paths, action: options.verb.bridge().capitalized,
-                                           useSTDIN: options.useSTDIN, quiet: options.quiet,
-                                           useScriptInputFiles: options.useScriptInputFiles,
-                                           forceExclude: options.forceExclude,
-                                           useExcludingByPrefix: options.useExcludingByPrefix,
-                                           cache: cache,
-                                           parallel: true,
-                                           allowZeroLintableFiles: allowZeroLintableFiles, block: block)
-        return .success(visitor)
-    }
-
-    func shouldSkipFile(atPath path: String?) -> Bool {
-        return false
-    }
-
-    func linter(forFile file: SwiftLintFile, configuration: Configuration) -> Linter {
-        return Linter(file: file, configuration: configuration, cache: cache)
-    }
-}
-
-private func resolveParamsFiles(args: [String]) -> [String] {
-    return args.reduce(into: []) { (allArgs: inout [String], arg: String) -> Void in
-        if arg.hasPrefix("@"), let contents = try? String(contentsOfFile: String(arg.dropFirst())) {
-            allArgs.append(contentsOf: resolveParamsFiles(args: contents.split(separator: "\n").map(String.init)))
-        } else {
-            allArgs.append(arg)
-        }
-    }
-}
 
 private class LintOrAnalyzeResultBuilder {
     var violations = [StyleViolation]()
@@ -243,7 +174,7 @@ extension Configuration {
         storage: RuleStorage,
         visitorBlock: @escaping (CollectedLinter) -> Void
     ) -> Result<[SwiftLintFile], SwiftLintError> {
-        return LintableFilesVisitor.create(options,
+        return LintableFilesVisitor.create(options: options,
                                            cache: cache,
                                            allowZeroLintableFiles: allowZeroLintableFiles,
                                            block: visitorBlock).flatMap({ visitor in
@@ -299,29 +230,17 @@ extension Configuration {
         var collected = 0
         let total = linters.filter({ $0.isCollecting }).count
         let collect = { (linter: Linter) -> CollectedLinter? in
-            let skipFile = visitor.shouldSkipFile(atPath: linter.file.path)
             if !visitor.quiet, linter.isCollecting, let filePath = linter.file.path {
                 let outputFilename = self.outputFilename(for: filePath, duplicateFileNames: duplicateFileNames)
                 let increment = {
                     collected += 1
-                    if skipFile {
-                        queuedPrintError("""
-                            Skipping '\(outputFilename)' (\(collected)/\(total)) \
-                            because its compiler arguments could not be found
-                            """)
-                    } else {
-                        queuedPrintError("Collecting '\(outputFilename)' (\(collected)/\(total))")
-                    }
+                    queuedPrintError("Collecting '\(outputFilename)' (\(collected)/\(total))")
                 }
                 if visitor.parallel {
                     indexIncrementerQueue.sync(execute: increment)
                 } else {
                     increment()
                 }
-            }
-
-            guard !skipFile else {
-                return nil
             }
 
             return autoreleasepool {
