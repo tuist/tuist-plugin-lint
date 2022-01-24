@@ -2,11 +2,11 @@ import ArgumentParser
 import TuistPluginSwiftLintFramework
 
 extension MainCommand {
-    /// A command to lint the code using Swiftlint.
+    /// A command to lint the code using SwiftLint.
     struct LintCommand: ParsableCommand {
         static var configuration = CommandConfiguration(
             commandName: "lint",
-            abstract: "Lints the code of your projects using Swiftlint."
+            abstract: "Lints the code of your projects using SwiftLint."
         )
         
         @Option(
