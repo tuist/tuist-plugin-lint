@@ -1,6 +1,24 @@
 import Foundation
 import ProjectAutomation
 
+enum LintServiceError: Error, CustomStringConvertible, Equatable {
+    /// Thrown when a graph can not be found at the given path.
+    case graphNotFound(reason: String)
+    
+    /// Thrown when target with given name does not exist.
+    case targetNotFound(targetName: String)
+    
+    /// Error description.
+    var description: String {
+        switch self {
+        case .graphNotFound(let reason):
+            return "The project's graph can not be found. Reason: \(reason)"
+        case .targetNotFound(let targetName):
+            return "A target with a name '\(targetName)' not found in the project."
+        }
+    }
+}
+
 /// A service that manages code linting.
 public final class LintService {
     public init() {}
@@ -10,133 +28,44 @@ public final class LintService {
     ///   - path: The path to the directory that contains the workspace or project whose code will be linted.
     ///   - targetName: The target to be linted. When not specified all the targets of the graph are linted.
     public func run(path: String?, targetName: String?) throws {
-        print("Hello")
-        
+        let graph = try getGraph(at: path)
+        let sourcesToLint = try getSourcesToLint(in: graph, targetName: targetName)
+    }
+    
+    // TODO: add unit tests
+    private func getGraph(at path: String?) throws -> Graph {
         do {
-            let graph: Graph = try {
-                if let path = path {
-                    print("path: " + path)
-                    return try Tuist.graph(at: path)
-                } else {
-                    return try Tuist.graph()
-                }
-            }()
+            if let path = path {
+                return try Tuist.graph(at: path)
+            } else {
+                return try Tuist.graph()
+            }
         } catch {
-            print(error)
+            throw LintServiceError.graphNotFound(reason: "\(error)")
+        }
+    }
+    
+    // TODO: add unit tests
+    private func getSourcesToLint(in graph: Graph, targetName: String?) throws -> [String] {
+        if let targetName = targetName {
+            guard let target = graph.allTargets.first(where: { $0.name == targetName }) else {
+                throw LintServiceError.targetNotFound(targetName: targetName)
+            }
+            
+            return target.sources
         }
         
-        //        let targets = graph.projects.values.flatMap(\.targets)
-        //        print("The current graph has the following targets: \(targets.map(\.name).joined(separator: " "))")
+        return graph.allTargets.flatMap { $0.sources }
     }
 }
 
-
-
-// ------------------------------------------------
-// ----------- OLD IMPLEMENTATION -----------------
-// ------------------------------------------------
-
-//enum LintCodeServiceError: FatalError, Equatable {
-//    /// Thrown when target with given name does not exist.
-//    case targetNotFound(String)
-//    /// Throws when no lintable files found for target with given name.
-//    case lintableFilesForTargetNotFound(String)
-//
-//    /// Error type.
-//    var type: ErrorType {
-//        switch self {
-//        case .targetNotFound, .lintableFilesForTargetNotFound:
-//            return .abort
-//        }
-//    }
-//
-//    /// Description
-//    var description: String {
-//        switch self {
-//        case let .targetNotFound(name):
-//            return "Target with name '\(name)' not found in the project."
-//        case let .lintableFilesForTargetNotFound(name):
-//            return "No lintable files for target with name '\(name)'."
-//        }
-//    }
-//}
-//
-//final class LintCodeService {
-//    private let codeLinter: CodeLinting
-//    private let manifestGraphLoader: ManifestGraphLoading
-//
-//    convenience init() {
-//        let manifestLoader = ManifestLoaderFactory()
-//            .createManifestLoader()
-//        let manifestGraphLoader = ManifestGraphLoader(manifestLoader: manifestLoader)
-//        let codeLinter = CodeLinter()
-//        self.init(
-//            codeLinter: codeLinter,
-//            manifestGraphLoader: manifestGraphLoader
-//        )
-//    }
-//
-//    init(
-//        codeLinter: CodeLinting,
-//        manifestGraphLoader: ManifestGraphLoading
-//    ) {
-//        self.codeLinter = codeLinter
-//        self.manifestGraphLoader = manifestGraphLoader
-//    }
-//
-//    func run(path: String?, targetName: String?, strict: Bool) throws {
-//        // Determine destination path
-//        let path = self.path(path)
-//
-//        // Load graph
-//        logger.notice("Loading the dependency graph at \(path)")
-//        let graph = try manifestGraphLoader.loadGraph(at: path)
-//
-//        // Get sources
-//        let graphTraverser = GraphTraverser(graph: graph)
-//        let sources = try getSources(targetName: targetName, graphTraverser: graphTraverser)
-//
-//        // Lint code
-//        logger.notice("Running code linting")
-//        try codeLinter.lint(sources: sources, path: path, strict: strict)
-//    }
-//
-//    // MARK: - Destination path
-//
-//    private func path(_ path: String?) -> AbsolutePath {
-//        guard let path = path else { return FileHandler.shared.currentPath }
-//
-//        return AbsolutePath(path, relativeTo: FileHandler.shared.currentPath)
-//    }
-//
-//    // MARK: - Get sources to lint
-//
-//    private func getSources(targetName: String?, graphTraverser: GraphTraversing) throws -> [AbsolutePath] {
-//        if let targetName = targetName {
-//            return try getTargetSources(targetName: targetName, graphTraverser: graphTraverser)
-//        } else {
-//            return graphTraverser.allTargets()
-//                .flatMap(\.target.sources)
-//                .map(\.path)
-//        }
-//    }
-//
-//    private func getTargetSources(targetName: String, graphTraverser: GraphTraversing) throws -> [AbsolutePath] {
-//        guard let target = graphTraverser.allTargets()
-//            .map(\.target)
-//            .first(where: { $0.name == targetName })
-//        else {
-//            throw LintCodeServiceError.targetNotFound(targetName)
-//        }
-//
-//        let sources = target.sources.map(\.path)
-//
-//        if sources.isEmpty {
-//            throw LintCodeServiceError.lintableFilesForTargetNotFound(targetName)
-//        }
-//        return sources
-//    }
-//}
+// TODO: add unit tests
+private extension Graph {
+    /// Returns a list of targets that are included into the graph.
+    var allTargets: [Target] {
+        projects.values.flatMap { $0.targets }
+    }
+}
 
 
 
