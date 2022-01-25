@@ -141,7 +141,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
 
 private let indexIncrementerQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.indexIncrementer")
 
-extension Configuration {    
+extension Configuration {
     func visitLintableFiles(
         options: LintOptions,
         cache: LinterCache? = nil,
@@ -323,17 +323,6 @@ extension Configuration {
     }
 }
 
-extension Reporter {
-    static func report(violations: [StyleViolation], realtimeCondition: Bool) {
-        if isRealtime == realtimeCondition {
-            let report = generateReport(violations)
-            if !report.isEmpty {
-                queuedPrint(report)
-            }
-        }
-    }
-}
-
 func reporterFrom(optionsReporter: String?, configuration: Configuration) -> Reporter.Type {
     return reporterFrom(identifier: optionsReporter ?? configuration.reporter)
 }
@@ -346,44 +335,6 @@ enum SwiftLintError: LocalizedError {
         switch self {
         case .usageError(let description):
             return description
-        }
-    }
-}
-
-private struct DuplicateCollector {
-    var all = Set<String>()
-    var duplicates = Set<String>()
-}
-
-private extension Collection where Element == Linter {
-    var duplicateFileNames: Set<String> {
-        let collector = reduce(into: DuplicateCollector()) { result, linter in
-            if let filename = linter.file.path?.bridge().lastPathComponent {
-                if result.all.contains(filename) {
-                    result.duplicates.insert(filename)
-                }
-
-                result.all.insert(filename)
-            }
-        }
-        return collector.duplicates
-    }
-}
-
-extension Array {
-    func parallelCompactMap<T>(transform: (Element) -> T?) -> [T] {
-        return parallelMap(transform: transform).compactMap { $0 }
-    }
-
-    func parallelMap<T>(transform: (Element) -> T) -> [T] {
-        return [T](unsafeUninitializedCapacity: count) { buffer, initializedCount in
-            let baseAddress = buffer.baseAddress!
-            DispatchQueue.concurrentPerform(iterations: count) { index in
-                // Using buffer[index] does assignWithTake which tries
-                // to read the uninitialized value (to release it) and crashes
-                (baseAddress + index).initialize(to: transform(self[index]))
-            }
-            initializedCount = count
         }
     }
 }
