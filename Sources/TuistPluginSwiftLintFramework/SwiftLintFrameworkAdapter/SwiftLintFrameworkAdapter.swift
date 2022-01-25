@@ -4,28 +4,28 @@ import SwiftLintFramework
 #warning("TODO: needs documentation")
 #warning("TODO: unit tests")
 
-public protocol SwiftLintAdapting {
+public protocol SwiftLintFrameworkAdapting {
     func lint(sources: [String])
 }
 
-public final class SwiftLintAdapter: SwiftLintAdapting {
+public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     public init() { }
     
     public func lint(sources: [String]) {
         let options = LintOptions.create(sources: sources)
         
-        SwiftLintAdapter.lint(options: options)
+        SwiftLintFrameworkAdapter.lint(options: options)
     }
     
     private static func lint(options: LintOptions) -> Result<(), SwiftLintError> {
-        let builder = LintOrAnalyzeResultBuilder(options)
+        let builder = LintResultBuilder(options: options)
         
         return collectViolations(builder: builder)
             .flatMap { postProcessViolations(files: $0, builder: builder) }
         
     }
     
-    private static func collectViolations(builder: LintOrAnalyzeResultBuilder) -> Result<[SwiftLintFile], SwiftLintError> {
+    private static func collectViolations(builder: LintResultBuilder) -> Result<[SwiftLintFile], SwiftLintError> {
         let options = builder.options
         let visitorMutationQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.lintVisitorMutation")
         
@@ -78,7 +78,7 @@ public final class SwiftLintAdapter: SwiftLintAdapting {
         }
     }
     
-    private static func postProcessViolations(files: [SwiftLintFile], builder: LintOrAnalyzeResultBuilder) -> Result<(), SwiftLintError> {
+    private static func postProcessViolations(files: [SwiftLintFile], builder: LintResultBuilder) -> Result<(), SwiftLintError> {
         let options = builder.options
         let configuration = builder.configuration
         if isWarningThresholdBroken(configuration: configuration, violations: builder.violations)
@@ -141,33 +141,7 @@ public final class SwiftLintAdapter: SwiftLintAdapting {
 
 private let indexIncrementerQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.indexIncrementer")
 
-private class LintOrAnalyzeResultBuilder {
-    var violations = [StyleViolation]()
-    let storage = RuleStorage()
-    let configuration: Configuration
-    let reporter: Reporter.Type
-    let cache: LinterCache?
-    let options: LintOptions
-
-    init(_ options: LintOptions) {
-        let config = Configuration(options: options)
-        
-        configuration = Configuration(options: options)
-        reporter = reporterFrom(optionsReporter: options.reporter, configuration: config)
-        cache = options.ignoreCache ? nil : LinterCache(configuration: config)
-        self.options = options
-    }
-}
-
-extension Configuration {
-    init(options: LintOptions) {
-        self.init(
-            configurationFiles: options.configurationFiles,
-            enableAllRules: options.enableAllRules,
-            cachePath: options.cachePath
-        )
-    }
-    
+extension Configuration {    
     func visitLintableFiles(
         options: LintOptions,
         cache: LinterCache? = nil,

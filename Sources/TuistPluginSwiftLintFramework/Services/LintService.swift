@@ -21,10 +21,10 @@ enum LintServiceError: Error, CustomStringConvertible, Equatable {
 
 /// A service that manages code linting.
 public final class LintService {
-    private let swiftLintAdapter: SwiftLintAdapting
+    private let swiftLintAdapter: SwiftLintFrameworkAdapting
     
     public init(
-        swiftLintAdapter: SwiftLintAdapting = SwiftLintAdapter()
+        swiftLintAdapter: SwiftLintFrameworkAdapting = SwiftLintFrameworkAdapter()
     ) {
         self.swiftLintAdapter = swiftLintAdapter
     }
