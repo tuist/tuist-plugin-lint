@@ -15,7 +15,7 @@ class LintResultBuilder {
         let config = Configuration(options: options)
         
         self.configuration = Configuration(options: options)
-        self.reporter = reporterFrom(optionsReporter: options.reporter, configuration: config)
+        self.reporter = reporterFrom(identifier: options.reporter ?? config.reporter)
         self.cache = options.ignoreCache ? nil : LinterCache(configuration: config)
         self.options = options
     }
