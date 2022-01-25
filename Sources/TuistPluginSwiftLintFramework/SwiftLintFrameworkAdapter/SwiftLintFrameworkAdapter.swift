@@ -27,12 +27,12 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         let options = builder.options
         let visitorMutationQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.lintVisitorMutation")
         
-        return try builder.configuration
-            .visitLintableFiles(
+        let visitor = LintableFilesVisitor
+            .create(
                 options: options,
                 cache: builder.cache,
-                storage: builder.storage,
-                visitorBlock: { linter in
+                allowZeroLintableFiles: builder.configuration.allowZeroLintableFiles,
+                block: { linter in
                     let currentViolations: [StyleViolation] = applyLeniency(
                         options: options,
                         violations: linter.styleViolations(using: builder.storage)
@@ -45,15 +45,14 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
                     builder.reporter.report(violations: currentViolations, realtimeCondition: true)
                 }
             )
-            
+        return try builder.configuration.visitLintableFiles(with: visitor, storage: builder.storage)
     }
     
     private static func applyLeniency(options: LintOptions, violations: [StyleViolation]) -> [StyleViolation] {
-        switch (options.lenient, options.strict) {
-        case (false, false):
+        switch options.leniency {
+        case .default:
             return violations
-
-        case (true, false):
+        case .lenient:
             return violations.map {
                 if $0.severity == .error {
                     return $0.with(severity: .warning)
@@ -61,8 +60,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
                     return $0
                 }
             }
-
-        case (false, true):
+        case .strict:
             return violations.map {
                 if $0.severity == .warning {
                     return $0.with(severity: .error)
@@ -70,9 +68,6 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
                     return $0
                 }
             }
-
-        case (true, true):
-            queuedFatalError("Invalid command line options: 'lenient' and 'strict' are mutually exclusive.")
         }
     }
     
@@ -80,7 +75,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         let options = builder.options
         let configuration = builder.configuration
         if isWarningThresholdBroken(configuration: configuration, violations: builder.violations)
-            && !options.lenient {
+            && options.leniency != .lenient {
             builder.violations.append(
                 createThresholdViolation(threshold: configuration.warningThreshold!)
             )
@@ -134,28 +129,19 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
 
 
 
+
+
+
+
+
+
+
+
 /// MARK: - Helper
 
 private let indexIncrementerQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.indexIncrementer")
 
 extension Configuration {
-    func visitLintableFiles(
-        options: LintOptions,
-        cache: LinterCache? = nil,
-        storage: RuleStorage,
-        visitorBlock: @escaping (CollectedLinter) -> Void
-    ) throws -> [SwiftLintFile] {
-        let visitor = LintableFilesVisitor
-            .create(
-                options: options,
-                cache: cache,
-                allowZeroLintableFiles: allowZeroLintableFiles,
-                block: visitorBlock
-            )
-        
-        return try visitLintableFiles(with: visitor, storage: storage)
-    }
-    
     func visitLintableFiles(with visitor: LintableFilesVisitor, storage: RuleStorage) throws -> [SwiftLintFile] {
         let files = try getFiles(with: visitor)
         let groupedFiles = try groupFiles(files, visitor: visitor)

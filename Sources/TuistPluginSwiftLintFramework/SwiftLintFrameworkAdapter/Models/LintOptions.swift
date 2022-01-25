@@ -3,11 +3,22 @@ import Foundation
 #warning("needs documentation")
 
 struct LintOptions {
+    /// Leniency strategy.
+    enum Leniency: Equatable {
+        /// Keeps warnings as warnings and serious violations as serious violations.
+        case `default`
+        
+        /// Upgrades warnings to serious violations (errors).
+        case strict
+        
+        /// Downgrades serious violations to warnings, warning threshold is disabled.
+        case lenient
+    }
+    
     let paths: [String]
     let useSTDIN: Bool
     let configurationFiles: [String]
-    let strict: Bool
-    let lenient: Bool
+    let leniency: Leniency
     let forceExclude: Bool
     let useExcludingByPrefix: Bool
     let useScriptInputFiles: Bool
@@ -18,19 +29,15 @@ struct LintOptions {
     let enableAllRules: Bool
     
     #warning("make `configurationFiles` configurable")
-    #warning("make `strict` configurable")
-    #warning("make `lenient` configurable")
+    #warning("make `leniency` configurable")
     #warning("make `quiet` configurable")
-    
-    #warning("TODO: can `strict` and `lenient` be merged?")
     
     static func create(sources: [String]) -> Self {
         LintOptions(
             paths: sources,
             useSTDIN: false,
             configurationFiles: [],
-            strict: false,
-            lenient: false,
+            leniency: .default,
             forceExclude: false,
             useExcludingByPrefix: false,
             useScriptInputFiles: false,
