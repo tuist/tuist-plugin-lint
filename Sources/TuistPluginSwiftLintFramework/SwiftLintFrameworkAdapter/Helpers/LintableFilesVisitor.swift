@@ -22,7 +22,7 @@ struct LintableFilesVisitor {
         cache: LinterCache?,
         allowZeroLintableFiles: Bool,
         block: @escaping (CollectedLinter) -> Void
-    ) -> Result<LintableFilesVisitor, SwiftLintError> {
+    ) -> LintableFilesVisitor {
         let paths = resolveParamsFiles(args: options.paths)
         
         let visitor = LintableFilesVisitor(
@@ -39,7 +39,7 @@ struct LintableFilesVisitor {
             block: block
         )
         
-        return .success(visitor)
+        return visitor
     }
 
     func linter(forFile file: SwiftLintFile, configuration: Configuration) -> Linter {
