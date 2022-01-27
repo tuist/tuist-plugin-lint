@@ -42,14 +42,15 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             let files = try configuration.visitLintableFiles(with: visitor, storage: storage)
             
             // post processing
-            if Self.isWarningThresholdBroken(configuration: configuration, violations: violations) && leniency != .lenient {
-                violations.append(
-                    Self.createThresholdViolation(threshold: configuration.warningThreshold!)
-                )
-                reporter.report(violations: [violations.last!], realtimeCondition: true)
+            if let warningThreshold = configuration.warningThreshold, violations.isWarningThresholdBroken(warningThreshold: warningThreshold), leniency != .lenient {
+                let thresholdViolation = StyleViolation.createThresholdViolation(threshold: warningThreshold)
+                
+                violations.append(thresholdViolation)
+                reporter.report(violations: [thresholdViolation], realtimeCondition: true)
             }
+            
             reporter.report(violations: violations, realtimeCondition: false)
-            let numberOfSeriousViolations = violations.filter({ $0.severity == .error }).count
+            let numberOfSeriousViolations = violations.numberOfViolations(severity: .error)
             if !quiet {
                 Self.printStatus(
                     violations: violations,
@@ -74,27 +75,5 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             "Done \(verb)! Found \(violations.count) violation\(pluralSuffix(violations)), " +
             "\(serious) serious in \(files.count) file\(pluralSuffix(files))."
         )
-    }
-    
-    private static func isWarningThresholdBroken(configuration: Configuration, violations: [StyleViolation]) -> Bool {
-        guard let warningThreshold = configuration.warningThreshold else { return false }
-        
-        let numberOfWarningViolations = violations.filter({ $0.severity == .warning }).count
-        return numberOfWarningViolations >= warningThreshold
-    }
-    
-    private static func createThresholdViolation(threshold: Int) -> StyleViolation {
-        let description = RuleDescription(
-            identifier: "warning_threshold",
-            name: "Warning Threshold",
-            description: "Number of warnings thrown is above the threshold.",
-            kind: .lint
-        )
-        
-        return StyleViolation(
-            ruleDescription: description,
-            severity: .error,
-            location: Location(file: "", line: 0, character: 0),
-            reason: "Number of warnings exceeded threshold of \(threshold).")
     }
 }
