@@ -20,28 +20,22 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         let cache = LinterCache(configuration: configuration)
         let storage = RuleStorage()
         
-        var violations: [StyleViolation] = []
-        
         do {
             // Linting
             let visitor = LintableFilesVisitor(
-                paths: paths,
                 quiet: quiet,
-                cache: cache,
-                block: { [visitorMutationQueue] linter in
-                    let currentViolations = linter
-                        .styleViolations(using: storage)
-                        .applyingLeniency(leniency)
-                    
-                    visitorMutationQueue.sync {
-                        violations += currentViolations
-                    }
-                    
-                    linter.file.invalidateCache()
-                    currentViolations.report(with: reporter, realtimeCondition: true)
-                }
+                cache: cache
             )
-            let files = try visitLintableFiles(with: visitor, storage: storage, configuration: configuration)
+  
+            var (files, violations) = try visitLintableFiles(
+                with: visitor,
+                paths: resolveParamsFiles(args: paths),
+                storage: storage,
+                configuration: configuration,
+                leniency: leniency,
+                reporter: reporter,
+                cache: cache
+            )
             
             // post processing
             if let warningThreshold = configuration.warningThreshold, violations.isWarningThresholdBroken(warningThreshold: warningThreshold), leniency != .lenient {
@@ -68,29 +62,58 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     
     // MARK: - Helpers - Linting
     
-    private func visitLintableFiles(with visitor: LintableFilesVisitor, storage: RuleStorage, configuration: Configuration ) throws -> [SwiftLintFile] {
-        let files = try getFiles(with: visitor, configuration: configuration)
-        let groupedFiles = try groupFiles(files, visitor: visitor, configuration: configuration)
-        let linters = linters(for: groupedFiles, visitor: visitor)
-        let (collectedLinters, duplicateFileNames) = collect(linters: linters, visitor: visitor, storage: storage, duplicateFileNames: linters.duplicateFileNames, configuration: configuration)
-        let visitedFiles = visit(linters: collectedLinters, visitor: visitor, storage: storage, duplicateFileNames: duplicateFileNames, configuration: configuration)
+    private func visitLintableFiles(
+        with visitor: LintableFilesVisitor,
+        paths: [String],
+        storage: RuleStorage,
+        configuration: Configuration,
+        leniency: Leniency,
+        reporter: Reporter.Type,
+        cache: LinterCache
+    ) throws -> ([SwiftLintFile], [StyleViolation]) {
+        var violations: [StyleViolation] = []
         
-        return visitedFiles
+        let files = try getFiles(with: visitor, paths: paths, configuration: configuration)
+        let groupedFiles = try groupFiles(files, visitor: visitor, configuration: configuration)
+        let linters = linters(for: groupedFiles, visitor: visitor, cache: cache)
+        let (collectedLinters, duplicateFileNames) = collect(linters: linters, visitor: visitor, storage: storage, duplicateFileNames: linters.duplicateFileNames, configuration: configuration)
+        
+        let visitedFiles = visit(
+            linters: collectedLinters,
+            visitor: visitor,
+            storage: storage,
+            duplicateFileNames: duplicateFileNames,
+            configuration: configuration,
+            block: { [visitorMutationQueue] linter in
+                let currentViolations = linter
+                    .styleViolations(using: storage)
+                    .applyingLeniency(leniency)
+                
+                visitorMutationQueue.sync {
+                    violations += currentViolations
+                }
+                
+                linter.file.invalidateCache()
+                currentViolations.report(with: reporter, realtimeCondition: true)
+            }
+        )
+        
+        return (visitedFiles, violations)
     }
     
-    private func getFiles(with visitor: LintableFilesVisitor, configuration: Configuration) throws -> [SwiftLintFile] {
+    private func getFiles(with visitor: LintableFilesVisitor, paths: [String], configuration: Configuration) throws -> [SwiftLintFile] {
         if !visitor.quiet {
             let filesInfo: String
-            if visitor.paths.isEmpty || visitor.paths == [""] {
+            if paths.isEmpty || paths == [""] {
                 filesInfo = "in current working directory"
             } else {
-                filesInfo = "at paths \(visitor.paths.joined(separator: ", "))"
+                filesInfo = "at paths \(paths.joined(separator: ", "))"
             }
 
             queuedPrintError("Linting Swift files \(filesInfo)")
         }
         
-        return visitor.paths.flatMap {
+        return paths.flatMap {
             configuration.lintableFiles(inPath: $0, forceExclude: false)
         }
     }
@@ -124,7 +147,8 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     
     private func linters(
         for filesPerConfiguration: [Configuration: [SwiftLintFile]],
-        visitor: LintableFilesVisitor
+        visitor: LintableFilesVisitor,
+        cache: LinterCache
     ) -> [Linter] {
         let fileCount = filesPerConfiguration.reduce(0) { $0 + $1.value.count }
 
@@ -137,7 +161,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             } else {
                 newConfig = config
             }
-            linters += files.map { visitor.linter(forFile: $0, configuration: newConfig) }
+            linters += files.map { Linter(file: $0, configuration: newConfig, cache: cache) }
         }
         
         return linters
@@ -159,11 +183,8 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
                     collected += 1
                     queuedPrintError("Collecting '\(outputFilename)' (\(collected)/\(total))")
                 }
-                if visitor.parallel {
-                    indexIncrementerQueue.sync(execute: increment)
-                } else {
-                    increment()
-                }
+                
+                indexIncrementerQueue.sync(execute: increment)
             }
 
             return autoreleasepool {
@@ -171,9 +192,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             }
         }
 
-        let collectedLinters = visitor.parallel ?
-            linters.parallelCompactMap(transform: collect) :
-            linters.compactMap(collect)
+        let collectedLinters = linters.parallelCompactMap(transform: collect)
         
         return (collectedLinters, duplicateFileNames)
     }
@@ -183,7 +202,8 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         visitor: LintableFilesVisitor,
         storage: RuleStorage,
         duplicateFileNames: Set<String>,
-        configuration: Configuration
+        configuration: Configuration,
+        block: @escaping (CollectedLinter) -> Void
     ) -> [SwiftLintFile] {
         var visited = 0
         let visit = { [indexIncrementerQueue] (linter: CollectedLinter) -> SwiftLintFile in
@@ -193,19 +213,16 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
                     visited += 1
                     queuedPrintError("Linting '\(outputFilename)' (\(visited)/\(linters.count))")
                 }
-                if visitor.parallel {
-                    indexIncrementerQueue.sync(execute: increment)
-                } else {
-                    increment()
-                }
+                
+                indexIncrementerQueue.sync(execute: increment)
             }
 
             autoreleasepool {
-                visitor.block(linter)
+                block(linter)
             }
             return linter.file
         }
-        return visitor.parallel ? linters.parallelMap(transform: visit) : linters.map(visit)
+        return linters.parallelMap(transform: visit)
     }
 }
 
@@ -223,4 +240,14 @@ private func outputFilename(for path: String, duplicateFileNames: Set<String>, c
     }
 
     return pathComponents.joined(separator: "/")
+}
+
+private func resolveParamsFiles(args: [String]) -> [String] {
+    return args.reduce(into: []) { (allArgs: inout [String], arg: String) -> Void in
+        if arg.hasPrefix("@"), let contents = try? String(contentsOfFile: String(arg.dropFirst())) {
+            allArgs.append(contentsOf: resolveParamsFiles(args: contents.split(separator: "\n").map(String.init)))
+        } else {
+            allArgs.append(arg)
+        }
+    }
 }
