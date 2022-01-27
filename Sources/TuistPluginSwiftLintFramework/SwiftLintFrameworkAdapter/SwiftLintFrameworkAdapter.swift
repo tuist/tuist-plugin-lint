@@ -22,14 +22,31 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         
         do {
             // Linting
-            var (files, violations) = try visitLintableFiles(
-                paths: resolveParamsFiles(args: paths),
+            var violations: [StyleViolation] = []
+            
+            let files = try getFiles(paths: paths, configuration: configuration, quiet: quiet)
+            let groupedFiles = try groupFiles(files, configuration: configuration)
+            let linters = linters(for: groupedFiles, cache: cache)
+            let (collectedLinters, duplicateFileNames) = collect(linters: linters, storage: storage, duplicateFileNames: linters.duplicateFileNames, configuration: configuration, quiet: quiet)
+            
+            let visitedFiles = visit(
+                linters: collectedLinters,
                 storage: storage,
+                duplicateFileNames: duplicateFileNames,
                 configuration: configuration,
-                leniency: leniency,
                 quiet: quiet,
-                reporter: reporter,
-                cache: cache
+                block: { [visitorMutationQueue] linter in
+                    let currentViolations = linter
+                        .styleViolations(using: storage)
+                        .applyingLeniency(leniency)
+                    
+                    visitorMutationQueue.sync {
+                        violations += currentViolations
+                    }
+                    
+                    linter.file.invalidateCache()
+                    currentViolations.report(with: reporter, realtimeCondition: true)
+                }
             )
             
             // post processing
@@ -44,7 +61,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             let numberOfSeriousViolations = violations.numberOfViolations(severity: .error)
             if !quiet {
                 queuedPrintError(
-                    violations.generateSummary(numberOfFiles: files.count, numberOfSeriousViolations: numberOfSeriousViolations)
+                    violations.generateSummary(numberOfFiles: visitedFiles.count, numberOfSeriousViolations: numberOfSeriousViolations)
                 )
             }
 
@@ -56,45 +73,6 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     }
     
     // MARK: - Helpers - Linting
-    
-    private func visitLintableFiles(
-        paths: [String],
-        storage: RuleStorage,
-        configuration: Configuration,
-        leniency: Leniency,
-        quiet: Bool,
-        reporter: Reporter.Type,
-        cache: LinterCache
-    ) throws -> ([SwiftLintFile], [StyleViolation]) {
-        var violations: [StyleViolation] = []
-        
-        let files = try getFiles(paths: paths, configuration: configuration, quiet: quiet)
-        let groupedFiles = try groupFiles(files, configuration: configuration)
-        let linters = linters(for: groupedFiles, cache: cache)
-        let (collectedLinters, duplicateFileNames) = collect(linters: linters, storage: storage, duplicateFileNames: linters.duplicateFileNames, configuration: configuration, quiet: quiet)
-        
-        let visitedFiles = visit(
-            linters: collectedLinters,
-            storage: storage,
-            duplicateFileNames: duplicateFileNames,
-            configuration: configuration,
-            quiet: quiet,
-            block: { [visitorMutationQueue] linter in
-                let currentViolations = linter
-                    .styleViolations(using: storage)
-                    .applyingLeniency(leniency)
-                
-                visitorMutationQueue.sync {
-                    violations += currentViolations
-                }
-                
-                linter.file.invalidateCache()
-                currentViolations.report(with: reporter, realtimeCondition: true)
-            }
-        )
-        
-        return (visitedFiles, violations)
-    }
     
     private func getFiles(paths: [String], configuration: Configuration, quiet: Bool) throws -> [SwiftLintFile] {
         if !quiet {
