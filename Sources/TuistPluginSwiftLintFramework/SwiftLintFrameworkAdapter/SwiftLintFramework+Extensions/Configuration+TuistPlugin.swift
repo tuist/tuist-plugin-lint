@@ -128,7 +128,7 @@ extension Configuration {
         }
         
         return visitor.paths.flatMap {
-            self.lintableFiles(inPath: $0, forceExclude: visitor.forceExclude)
+            self.lintableFiles(inPath: $0, forceExclude: false)
         }
     }
     

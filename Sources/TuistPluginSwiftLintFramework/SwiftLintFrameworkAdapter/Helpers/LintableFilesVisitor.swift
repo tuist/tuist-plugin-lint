@@ -8,7 +8,6 @@ struct LintableFilesVisitor {
     let paths: [String]
     let action: String
     let quiet: Bool
-    let forceExclude: Bool
     let cache: LinterCache?
     let parallel: Bool
     let block: (CollectedLinter) -> Void
@@ -24,7 +23,6 @@ struct LintableFilesVisitor {
             paths: paths,
             action: options.verb.bridge().capitalized,
             quiet: options.quiet,
-            forceExclude: options.forceExclude,
             cache: cache,
             parallel: true,
             block: block

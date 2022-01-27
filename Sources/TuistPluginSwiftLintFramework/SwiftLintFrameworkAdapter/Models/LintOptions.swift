@@ -18,7 +18,6 @@ struct LintOptions {
     let paths: [String]
     let configurationFiles: [String]
     let leniency: Leniency
-    let forceExclude: Bool
     let reporter: String?
     let quiet: Bool
     
@@ -31,7 +30,6 @@ struct LintOptions {
             paths: sources,
             configurationFiles: [],
             leniency: .default,
-            forceExclude: false,
             reporter: nil,
             quiet: false
         )
