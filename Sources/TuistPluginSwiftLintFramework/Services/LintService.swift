@@ -3,7 +3,7 @@ import ProjectAutomation
 
 enum LintServiceError: Error, CustomStringConvertible, Equatable {
     /// Thrown when a graph can not be found at the given path.
-    case graphNotFound(reason: String)
+    case graphNotFound
     
     /// Thrown when target with given name does not exist.
     case targetNotFound(targetName: String)
@@ -11,8 +11,8 @@ enum LintServiceError: Error, CustomStringConvertible, Equatable {
     /// Error description.
     var description: String {
         switch self {
-        case .graphNotFound(let reason):
-            return "The project's graph can not be found. Reason: \(reason)"
+        case .graphNotFound:
+            return "The project's graph can not be found."
         case .targetNotFound(let targetName):
             return "A target with a name '\(targetName)' not found in the project."
         }
@@ -58,7 +58,7 @@ public final class LintService {
                 return try Tuist.graph()
             }
         } catch {
-            throw LintServiceError.graphNotFound(reason: "\(error)")
+            throw LintServiceError.graphNotFound
         }
     }
     
