@@ -32,8 +32,4 @@ struct LintOptions {
             quiet: false
         )
     }
-    
-    var verb: String {
-        "linting"
-    }
 }

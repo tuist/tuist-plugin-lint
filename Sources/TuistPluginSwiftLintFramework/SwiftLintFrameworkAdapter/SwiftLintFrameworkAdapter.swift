@@ -86,7 +86,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
                 violations: builder.violations,
                 files: files,
                 serious: numberOfSeriousViolations,
-                verb: options.verb
+                verb: "linting"
             )
         }
 

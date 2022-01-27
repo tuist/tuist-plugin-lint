@@ -6,7 +6,6 @@ import SwiftLintFramework
 
 struct LintableFilesVisitor {
     let paths: [String]
-    let action: String
     let quiet: Bool
     let cache: LinterCache?
     let parallel: Bool
@@ -21,7 +20,6 @@ struct LintableFilesVisitor {
         
         let visitor = LintableFilesVisitor(
             paths: paths,
-            action: options.verb.bridge().capitalized,
             quiet: options.quiet,
             cache: cache,
             parallel: true,

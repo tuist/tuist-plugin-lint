@@ -124,7 +124,7 @@ extension Configuration {
                 filesInfo = "at paths \(visitor.paths.joined(separator: ", "))"
             }
 
-            queuedPrintError("\(visitor.action) Swift files \(filesInfo)")
+            queuedPrintError("Linting Swift files \(filesInfo)")
         }
         
         return visitor.paths.flatMap {
@@ -144,7 +144,7 @@ extension Configuration {
                 let outputFilename = self.outputFilename(for: filePath, duplicateFileNames: duplicateFileNames)
                 let increment = {
                     visited += 1
-                    queuedPrintError("\(visitor.action) '\(outputFilename)' (\(visited)/\(linters.count))")
+                    queuedPrintError("Linting '\(outputFilename)' (\(visited)/\(linters.count))")
                 }
                 if visitor.parallel {
                     indexIncrementerQueue.sync(execute: increment)
