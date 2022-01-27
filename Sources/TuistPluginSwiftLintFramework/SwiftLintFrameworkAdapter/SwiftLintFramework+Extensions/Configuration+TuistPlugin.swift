@@ -133,19 +133,6 @@ extension Configuration {
     }
     
     private func getFiles(with visitor: LintableFilesVisitor) throws -> [SwiftLintFile] {
-        if visitor.useScriptInputFiles {
-            let files = try scriptInputFiles()
-            
-            guard visitor.forceExclude else {
-                return files
-            }
-
-            let scriptInputPaths = files.compactMap { $0.path }
-            let filesToLint = visitor.useExcludingByPrefix
-                              ? filterExcludedPathsByPrefix(in: scriptInputPaths)
-                              : filterExcludedPaths(in: scriptInputPaths)
-            return filesToLint.map(SwiftLintFile.init(pathDeferringReading:))
-        }
         if !visitor.quiet {
             let filesInfo: String
             if visitor.paths.isEmpty || visitor.paths == [""] {
@@ -188,33 +175,5 @@ extension Configuration {
             return linter.file
         }
         return visitor.parallel ? linters.parallelMap(transform: visit) : linters.map(visit)
-    }
-}
-
-// MARK: - Helper
-
-private func scriptInputFiles() throws -> [SwiftLintFile] {
-    let inputFileKey = "SCRIPT_INPUT_FILE_COUNT"
-    guard let countString = ProcessInfo.processInfo.environment[inputFileKey] else {
-        throw PlaceholderError.usageError(description: "\(inputFileKey) variable not set")
-    }
-    guard let count = Int(countString) else {
-        throw PlaceholderError.usageError(description: "\(inputFileKey) did not specify a number")
-    }
-    
-    return (0..<count).compactMap { fileNumber in
-        let environment = ProcessInfo.processInfo.environment
-        let variable = "SCRIPT_INPUT_FILE_\(fileNumber)"
-        
-        guard let path = environment[variable] else {
-            queuedPrintError(String(describing: "Environment variable not set: \(variable)"))
-            return nil
-        }
-        
-        if path.bridge().isSwiftFile() {
-            return SwiftLintFile(pathDeferringReading: path)
-        }
-        
-        return nil
     }
 }

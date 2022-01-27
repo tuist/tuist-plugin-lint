@@ -20,7 +20,6 @@ struct LintOptions {
     let leniency: Leniency
     let forceExclude: Bool
     let useExcludingByPrefix: Bool
-    let useScriptInputFiles: Bool
     let reporter: String?
     let quiet: Bool
     let cachePath: String?
@@ -38,7 +37,6 @@ struct LintOptions {
             leniency: .default,
             forceExclude: false,
             useExcludingByPrefix: false,
-            useScriptInputFiles: false,
             reporter: nil,
             quiet: false,
             cachePath: nil,

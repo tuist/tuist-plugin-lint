@@ -8,7 +8,6 @@ struct LintableFilesVisitor {
     let paths: [String]
     let action: String
     let quiet: Bool
-    let useScriptInputFiles: Bool
     let forceExclude: Bool
     let useExcludingByPrefix: Bool
     let cache: LinterCache?
@@ -28,7 +27,6 @@ struct LintableFilesVisitor {
             paths: paths,
             action: options.verb.bridge().capitalized,
             quiet: options.quiet,
-            useScriptInputFiles: options.useScriptInputFiles,
             forceExclude: options.forceExclude,
             useExcludingByPrefix: options.useExcludingByPrefix,
             cache: cache,
