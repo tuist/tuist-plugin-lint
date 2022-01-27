@@ -21,7 +21,6 @@ struct LintOptions {
     let forceExclude: Bool
     let reporter: String?
     let quiet: Bool
-    let cachePath: String?
     
     #warning("make `configurationFiles` configurable")
     #warning("make `leniency` configurable")
@@ -34,8 +33,7 @@ struct LintOptions {
             leniency: .default,
             forceExclude: false,
             reporter: nil,
-            quiet: false,
-            cachePath: nil
+            quiet: false
         )
     }
     

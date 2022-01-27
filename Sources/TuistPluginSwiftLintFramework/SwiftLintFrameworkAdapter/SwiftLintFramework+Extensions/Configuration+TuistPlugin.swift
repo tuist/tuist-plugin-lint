@@ -8,10 +8,7 @@ private let indexIncrementerQueue = DispatchQueue(label: "io.tuist.tuist-plugin-
 
 extension Configuration {
     init(options: LintOptions) {
-        self.init(
-            configurationFiles: options.configurationFiles,
-            cachePath: options.cachePath
-        )
+        self.init(configurationFiles: options.configurationFiles)
     }
     
     func visitLintableFiles(with visitor: LintableFilesVisitor, storage: RuleStorage) throws -> [SwiftLintFile] {
