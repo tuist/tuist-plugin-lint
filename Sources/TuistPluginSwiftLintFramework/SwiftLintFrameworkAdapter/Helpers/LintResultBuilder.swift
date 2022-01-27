@@ -3,20 +3,22 @@ import SwiftLintFramework
 
 #warning("TODO: needs documentation")
 
-class LintResultBuilder {
-    var violations = [StyleViolation]()
-    let storage = RuleStorage()
+final class LintResultBuilder {
+    var violations: [StyleViolation]
+    let storage: RuleStorage
     let configuration: Configuration
     let reporter: Reporter.Type
-    let cache: LinterCache?
-    let options: LintOptions
+    let cache: LinterCache
 
-    init(options: LintOptions) {
-        let config = Configuration(options: options)
-        
-        self.configuration = Configuration(options: options)
-        self.reporter = reporterFrom(identifier: config.reporter)
-        self.cache = LinterCache(configuration: config)
-        self.options = options
+    init(
+        configuration: Configuration,
+        reporter: Reporter.Type,
+        cache: LinterCache
+    ) {
+        self.violations = []
+        self.storage = RuleStorage()
+        self.configuration = configuration
+        self.reporter = reporter
+        self.cache = cache
     }
 }

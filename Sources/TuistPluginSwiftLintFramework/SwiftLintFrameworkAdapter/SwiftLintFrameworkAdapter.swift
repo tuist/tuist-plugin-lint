@@ -5,99 +5,68 @@ import SwiftLintFramework
 #warning("TODO: unit tests")
 
 public protocol SwiftLintFrameworkAdapting {
-    func lint(paths: [String])
+    func lint(paths: [String], configurationFiles: [String], leniency: Leniency, quiet: Bool)
 }
 
 public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     public init() { }
     
-    public func lint(paths: [String]) {
-        let options = LintOptions(
-            paths: paths,
-            configurationFiles: [],
-            leniency: .default,
-            quiet: false
+    public func lint(paths: [String], configurationFiles: [String], leniency: Leniency, quiet: Bool) {
+        let configuration = Configuration(configurationFiles: configurationFiles)
+        let reporter = reporterFrom(identifier: configuration.reporter)
+        let cache = LinterCache(configuration: configuration)
+        
+        let builder = LintResultBuilder(
+            configuration: configuration,
+            reporter: reporter,
+            cache: cache
         )
-        let builder = LintResultBuilder(options: options)
         
         do {
-            let files = try Self.collectViolations(builder: builder)
-            Self.postProcessViolations(files: files, builder: builder)
+            // Linting
+            let visitorMutationQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.lintVisitorMutation")
+            let visitor = LintableFilesVisitor(
+                paths: paths,
+                quiet: quiet,
+                cache: cache,
+                block: { linter in
+                    let currentViolations = linter
+                        .styleViolations(using: builder.storage)
+                        .applyingLeniency(leniency)
+                    
+                    visitorMutationQueue.sync {
+                        builder.violations += currentViolations
+                    }
+                    
+                    linter.file.invalidateCache()
+                    builder.reporter.report(violations: currentViolations, realtimeCondition: true)
+                }
+            )
+            let files = try configuration.visitLintableFiles(with: visitor, storage: builder.storage)
+            
+            // post processing
+            if Self.isWarningThresholdBroken(configuration: configuration, violations: builder.violations) && leniency != .lenient {
+                builder.violations.append(
+                    Self.createThresholdViolation(threshold: configuration.warningThreshold!)
+                )
+                builder.reporter.report(violations: [builder.violations.last!], realtimeCondition: true)
+            }
+            builder.reporter.report(violations: builder.violations, realtimeCondition: false)
+            let numberOfSeriousViolations = builder.violations.filter({ $0.severity == .error }).count
+            if !quiet {
+                Self.printStatus(
+                    violations: builder.violations,
+                    files: files,
+                    serious: numberOfSeriousViolations,
+                    verb: "linting"
+                )
+            }
+
+            try? cache.save()
+            guard numberOfSeriousViolations == 0 else { exit(2) }
         } catch {
             #warning("Handle errors")
         }
-    }
-    
-    private static func collectViolations(builder: LintResultBuilder) throws -> [SwiftLintFile] {
-        let options = builder.options
-        let visitorMutationQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.lintVisitorMutation")
-        
-        let visitor = LintableFilesVisitor(
-            paths: options.paths,
-            quiet: options.quiet,
-            cache: builder.cache,
-            block: { linter in
-                let currentViolations: [StyleViolation] = applyLeniency(
-                    options: options,
-                    violations: linter.styleViolations(using: builder.storage)
-                )
-                visitorMutationQueue.sync {
-                    builder.violations += currentViolations
-                }
-                
-                linter.file.invalidateCache()
-                builder.reporter.report(violations: currentViolations, realtimeCondition: true)
-            }
-        )
-        
-        return try builder.configuration.visitLintableFiles(with: visitor, storage: builder.storage)
-    }
-    
-    private static func applyLeniency(options: LintOptions, violations: [StyleViolation]) -> [StyleViolation] {
-        switch options.leniency {
-        case .default:
-            return violations
-        case .lenient:
-            return violations.map {
-                if $0.severity == .error {
-                    return $0.with(severity: .warning)
-                } else {
-                    return $0
-                }
-            }
-        case .strict:
-            return violations.map {
-                if $0.severity == .warning {
-                    return $0.with(severity: .error)
-                } else {
-                    return $0
-                }
-            }
-        }
-    }
-    
-    private static func postProcessViolations(files: [SwiftLintFile], builder: LintResultBuilder) {
-        let options = builder.options
-        let configuration = builder.configuration
-        if isWarningThresholdBroken(configuration: configuration, violations: builder.violations) && options.leniency != .lenient {
-            builder.violations.append(
-                createThresholdViolation(threshold: configuration.warningThreshold!)
-            )
-            builder.reporter.report(violations: [builder.violations.last!], realtimeCondition: true)
-        }
-        builder.reporter.report(violations: builder.violations, realtimeCondition: false)
-        let numberOfSeriousViolations = builder.violations.filter({ $0.severity == .error }).count
-        if !options.quiet {
-            printStatus(
-                violations: builder.violations,
-                files: files,
-                serious: numberOfSeriousViolations,
-                verb: "linting"
-            )
-        }
-
-        try? builder.cache?.save()
-        guard numberOfSeriousViolations == 0 else { exit(2) }
     }
     
     private static func printStatus(violations: [StyleViolation], files: [SwiftLintFile], serious: Int, verb: String) {

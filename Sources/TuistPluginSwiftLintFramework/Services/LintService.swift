@@ -38,7 +38,15 @@ public final class LintService {
         let graph = try getGraph(at: path)
         let sourcesToLint = try getSourcesToLint(in: graph, targetName: targetName)
         
-        swiftLintAdapter.lint(paths: sourcesToLint)
+        #warning("make `configurationFiles` configurable")
+        #warning("make `leniency` configurable")
+        #warning("make `quiet` configurable")
+        swiftLintAdapter.lint(
+            paths: sourcesToLint,
+            configurationFiles: [],
+            leniency: .default,
+            quiet: false
+        )
     }
     
     #warning("TODO: add unit tests")

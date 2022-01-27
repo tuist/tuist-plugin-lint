@@ -6,11 +6,7 @@ import SwiftLintFramework
 
 private let indexIncrementerQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.indexIncrementer")
 
-extension Configuration {
-    init(options: LintOptions) {
-        self.init(configurationFiles: options.configurationFiles)
-    }
-    
+extension Configuration {    
     func visitLintableFiles(with visitor: LintableFilesVisitor, storage: RuleStorage) throws -> [SwiftLintFile] {
         let files = try getFiles(with: visitor)
         let groupedFiles = try groupFiles(files, visitor: visitor)
