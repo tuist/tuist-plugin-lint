@@ -12,13 +12,11 @@ struct LintableFilesVisitor {
     let useExcludingByPrefix: Bool
     let cache: LinterCache?
     let parallel: Bool
-    let allowZeroLintableFiles: Bool
     let block: (CollectedLinter) -> Void
 
     static func create(
         options: LintOptions,
         cache: LinterCache?,
-        allowZeroLintableFiles: Bool,
         block: @escaping (CollectedLinter) -> Void
     ) -> LintableFilesVisitor {
         let paths = resolveParamsFiles(args: options.paths)
@@ -31,7 +29,6 @@ struct LintableFilesVisitor {
             useExcludingByPrefix: options.useExcludingByPrefix,
             cache: cache,
             parallel: true,
-            allowZeroLintableFiles: allowZeroLintableFiles,
             block: block
         )
         

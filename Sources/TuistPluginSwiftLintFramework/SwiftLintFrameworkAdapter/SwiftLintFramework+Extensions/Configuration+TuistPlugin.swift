@@ -6,18 +6,6 @@ import SwiftLintFramework
 
 private let indexIncrementerQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.indexIncrementer")
 
-#warning("REMOVE ME!")
-enum PlaceholderError: Error, CustomStringConvertible, Equatable {
-    case usageError(description: String)
-    
-    var description: String {
-        switch self {
-        case .usageError(let description):
-            return description
-        }
-    }
-}
-
 extension Configuration {
     init(options: LintOptions) {
         self.init(
@@ -106,11 +94,6 @@ extension Configuration {
         visitor: LintableFilesVisitor
     ) throws
         -> [Configuration: [SwiftLintFile]] {
-        if files.isEmpty && !visitor.allowZeroLintableFiles {
-            let errorMessage = "No lintable files found at paths: '\(visitor.paths.joined(separator: ", "))'"
-            throw PlaceholderError.usageError(description: errorMessage)
-        }
-
         var groupedFiles = [Configuration: [SwiftLintFile]]()
         for file in files {
             let fileConfiguration = configuration(for: file)

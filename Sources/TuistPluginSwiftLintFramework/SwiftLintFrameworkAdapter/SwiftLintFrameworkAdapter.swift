@@ -31,7 +31,6 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             .create(
                 options: options,
                 cache: builder.cache,
-                allowZeroLintableFiles: builder.configuration.allowZeroLintableFiles,
                 block: { linter in
                     let currentViolations: [StyleViolation] = applyLeniency(
                         options: options,
