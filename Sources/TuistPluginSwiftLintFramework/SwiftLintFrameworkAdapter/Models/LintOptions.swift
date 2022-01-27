@@ -16,7 +16,6 @@ struct LintOptions {
     }
     
     let paths: [String]
-    let useSTDIN: Bool
     let configurationFiles: [String]
     let leniency: Leniency
     let forceExclude: Bool
@@ -35,7 +34,6 @@ struct LintOptions {
     static func create(sources: [String]) -> Self {
         LintOptions(
             paths: sources,
-            useSTDIN: false,
             configurationFiles: [],
             leniency: .default,
             forceExclude: false,

@@ -7,7 +7,6 @@ import SwiftLintFramework
 struct LintableFilesVisitor {
     let paths: [String]
     let action: String
-    let useSTDIN: Bool
     let quiet: Bool
     let useScriptInputFiles: Bool
     let forceExclude: Bool
@@ -28,7 +27,6 @@ struct LintableFilesVisitor {
         let visitor = LintableFilesVisitor(
             paths: paths,
             action: options.verb.bridge().capitalized,
-            useSTDIN: options.useSTDIN,
             quiet: options.quiet,
             useScriptInputFiles: options.useScriptInputFiles,
             forceExclude: options.forceExclude,
