@@ -11,13 +11,13 @@ extension StyleViolation {
             return self
         case .strict:
             if severity == .warning {
-                return self.with(severity: .error)
+                return with(severity: .error)
             } else {
                 return self
             }
         case .lenient:
             if severity == .error {
-                return self.with(severity: .warning)
+                return with(severity: .warning)
             } else {
                 return self
             }
@@ -42,13 +42,13 @@ extension StyleViolation {
     }
 }
 
-extension Sequence where Element == StyleViolation {
+extension Collection where Element == StyleViolation {
     /// Returns a number of violations with the given severity level.
     func numberOfViolations(severity: ViolationSeverity) -> Int {
         filter { $0.severity == severity }.count
     }
     
-    /// Upgrades/Downgrades a list of violations depends on the given leniency.
+    /// Upgrades/Downgrades the list of violations depends on the given leniency.
     func applyingLeniency(_ leniency: Leniency) -> [Element] {
         map { $0.applyingLeniency(leniency) }
     }
@@ -56,5 +56,19 @@ extension Sequence where Element == StyleViolation {
     /// Checks if number of warnings exceeds threshold.
     func isWarningThresholdBroken(warningThreshold: Int) -> Bool {
         numberOfViolations(severity: .warning) >= warningThreshold
+    }
+    
+    /// Returns a summary message for the list of violations.
+    func generateSummary(numberOfFiles: Int, numberOfSeriousViolations: Int) -> String {
+        """
+        Done linting! Found \(count) violation\(count.pluralSuffix),
+        \(numberOfSeriousViolations) serious in \(numberOfFiles) file\(numberOfFiles.pluralSuffix).
+        """
+    }
+}
+
+private extension Int {
+    var pluralSuffix: String {
+        self > 1 ? "s" : ""
     }
 }

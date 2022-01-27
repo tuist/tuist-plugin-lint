@@ -52,11 +52,8 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             reporter.report(violations: violations, realtimeCondition: false)
             let numberOfSeriousViolations = violations.numberOfViolations(severity: .error)
             if !quiet {
-                Self.printStatus(
-                    violations: violations,
-                    files: files,
-                    serious: numberOfSeriousViolations,
-                    verb: "linting"
+                queuedPrintError(
+                    violations.generateSummary(numberOfFiles: files.count, numberOfSeriousViolations: numberOfSeriousViolations)
                 )
             }
 
@@ -65,15 +62,5 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         } catch {
             #warning("Handle errors")
         }
-    }
-    
-    private static func printStatus(violations: [StyleViolation], files: [SwiftLintFile], serious: Int, verb: String) {
-        let pluralSuffix = { (collection: [Any]) -> String in
-            return collection.count != 1 ? "s" : ""
-        }
-        queuedPrintError(
-            "Done \(verb)! Found \(violations.count) violation\(pluralSuffix(violations)), " +
-            "\(serious) serious in \(files.count) file\(pluralSuffix(files))."
-        )
     }
 }
