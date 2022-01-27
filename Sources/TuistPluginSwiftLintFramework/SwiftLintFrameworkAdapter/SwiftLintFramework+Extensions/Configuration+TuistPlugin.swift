@@ -10,7 +10,6 @@ extension Configuration {
     init(options: LintOptions) {
         self.init(
             configurationFiles: options.configurationFiles,
-            enableAllRules: options.enableAllRules,
             cachePath: options.cachePath
         )
     }
