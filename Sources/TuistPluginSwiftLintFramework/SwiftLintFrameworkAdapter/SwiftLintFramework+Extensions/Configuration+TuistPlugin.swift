@@ -25,8 +25,10 @@ extension Configuration {
         return visitedFiles
     }
     
-    private func linters(for filesPerConfiguration: [Configuration: [SwiftLintFile]],
-                         visitor: LintableFilesVisitor) -> [Linter] {
+    private func linters(
+        for filesPerConfiguration: [Configuration: [SwiftLintFile]],
+        visitor: LintableFilesVisitor
+    ) -> [Linter] {
         let fileCount = filesPerConfiguration.reduce(0) { $0 + $1.value.count }
 
         var linters = [Linter]()
@@ -40,6 +42,7 @@ extension Configuration {
             }
             linters += files.map { visitor.linter(forFile: $0, configuration: newConfig) }
         }
+        
         return linters
     }
     
@@ -57,10 +60,12 @@ extension Configuration {
         return pathComponents.joined(separator: "/")
     }
     
-    private func collect(linters: [Linter],
-                         visitor: LintableFilesVisitor,
-                         storage: RuleStorage,
-                         duplicateFileNames: Set<String>) -> ([CollectedLinter], Set<String>) {
+    private func collect(
+        linters: [Linter],
+        visitor: LintableFilesVisitor,
+        storage: RuleStorage,
+        duplicateFileNames: Set<String>
+    ) -> ([CollectedLinter], Set<String>) {
         var collected = 0
         let total = linters.filter({ $0.isCollecting }).count
         let collect = { (linter: Linter) -> CollectedLinter? in
@@ -92,8 +97,7 @@ extension Configuration {
     private func groupFiles(
         _ files: [SwiftLintFile],
         visitor: LintableFilesVisitor
-    ) throws
-        -> [Configuration: [SwiftLintFile]] {
+    ) throws -> [Configuration: [SwiftLintFile]] {
         var groupedFiles = [Configuration: [SwiftLintFile]]()
         for file in files {
             let fileConfiguration = configuration(for: file)
@@ -132,10 +136,12 @@ extension Configuration {
         }
     }
     
-    private func visit(linters: [CollectedLinter],
-                       visitor: LintableFilesVisitor,
-                       storage: RuleStorage,
-                       duplicateFileNames: Set<String>) -> [SwiftLintFile] {
+    private func visit(
+        linters: [CollectedLinter],
+        visitor: LintableFilesVisitor,
+        storage: RuleStorage,
+        duplicateFileNames: Set<String>
+    ) -> [SwiftLintFile] {
         var visited = 0
         let visit = { (linter: CollectedLinter) -> SwiftLintFile in
             if !visitor.quiet, let filePath = linter.file.path {

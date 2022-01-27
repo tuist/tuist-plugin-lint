@@ -73,8 +73,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     private static func postProcessViolations(files: [SwiftLintFile], builder: LintResultBuilder) {
         let options = builder.options
         let configuration = builder.configuration
-        if isWarningThresholdBroken(configuration: configuration, violations: builder.violations)
-            && options.leniency != .lenient {
+        if isWarningThresholdBroken(configuration: configuration, violations: builder.violations) && options.leniency != .lenient {
             builder.violations.append(
                 createThresholdViolation(threshold: configuration.warningThreshold!)
             )
@@ -83,8 +82,12 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         builder.reporter.report(violations: builder.violations, realtimeCondition: false)
         let numberOfSeriousViolations = builder.violations.filter({ $0.severity == .error }).count
         if !options.quiet {
-            printStatus(violations: builder.violations, files: files, serious: numberOfSeriousViolations,
-                        verb: options.verb)
+            printStatus(
+                violations: builder.violations,
+                files: files,
+                serious: numberOfSeriousViolations,
+                verb: options.verb
+            )
         }
 
         try? builder.cache?.save()
@@ -101,9 +104,9 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         )
     }
     
-    private static func isWarningThresholdBroken(configuration: Configuration,
-                                                 violations: [StyleViolation]) -> Bool {
+    private static func isWarningThresholdBroken(configuration: Configuration, violations: [StyleViolation]) -> Bool {
         guard let warningThreshold = configuration.warningThreshold else { return false }
+        
         let numberOfWarningViolations = violations.filter({ $0.severity == .warning }).count
         return numberOfWarningViolations >= warningThreshold
     }
@@ -115,6 +118,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             description: "Number of warnings thrown is above the threshold.",
             kind: .lint
         )
+        
         return StyleViolation(
             ruleDescription: description,
             severity: .error,
