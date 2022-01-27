@@ -19,7 +19,6 @@ struct LintOptions {
     let configurationFiles: [String]
     let leniency: Leniency
     let forceExclude: Bool
-    let useExcludingByPrefix: Bool
     let reporter: String?
     let quiet: Bool
     let cachePath: String?
@@ -36,7 +35,6 @@ struct LintOptions {
             configurationFiles: [],
             leniency: .default,
             forceExclude: false,
-            useExcludingByPrefix: false,
             reporter: nil,
             quiet: false,
             cachePath: nil,

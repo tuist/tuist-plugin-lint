@@ -9,7 +9,6 @@ struct LintableFilesVisitor {
     let action: String
     let quiet: Bool
     let forceExclude: Bool
-    let useExcludingByPrefix: Bool
     let cache: LinterCache?
     let parallel: Bool
     let block: (CollectedLinter) -> Void
@@ -26,7 +25,6 @@ struct LintableFilesVisitor {
             action: options.verb.bridge().capitalized,
             quiet: options.quiet,
             forceExclude: options.forceExclude,
-            useExcludingByPrefix: options.useExcludingByPrefix,
             cache: cache,
             parallel: true,
             block: block
