@@ -15,12 +15,9 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         let configuration = Configuration(configurationFiles: configurationFiles)
         let reporter = reporterFrom(identifier: configuration.reporter)
         let cache = LinterCache(configuration: configuration)
+        let storage = RuleStorage()
         
-        let builder = LintResultBuilder(
-            configuration: configuration,
-            reporter: reporter,
-            cache: cache
-        )
+        var violations: [StyleViolation] = []
         
         do {
             // Linting
@@ -31,31 +28,31 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
                 cache: cache,
                 block: { linter in
                     let currentViolations = linter
-                        .styleViolations(using: builder.storage)
+                        .styleViolations(using: storage)
                         .applyingLeniency(leniency)
                     
                     visitorMutationQueue.sync {
-                        builder.violations += currentViolations
+                        violations += currentViolations
                     }
                     
                     linter.file.invalidateCache()
-                    builder.reporter.report(violations: currentViolations, realtimeCondition: true)
+                    reporter.report(violations: currentViolations, realtimeCondition: true)
                 }
             )
-            let files = try configuration.visitLintableFiles(with: visitor, storage: builder.storage)
+            let files = try configuration.visitLintableFiles(with: visitor, storage: storage)
             
             // post processing
-            if Self.isWarningThresholdBroken(configuration: configuration, violations: builder.violations) && leniency != .lenient {
-                builder.violations.append(
+            if Self.isWarningThresholdBroken(configuration: configuration, violations: violations) && leniency != .lenient {
+                violations.append(
                     Self.createThresholdViolation(threshold: configuration.warningThreshold!)
                 )
-                builder.reporter.report(violations: [builder.violations.last!], realtimeCondition: true)
+                reporter.report(violations: [violations.last!], realtimeCondition: true)
             }
-            builder.reporter.report(violations: builder.violations, realtimeCondition: false)
-            let numberOfSeriousViolations = builder.violations.filter({ $0.severity == .error }).count
+            reporter.report(violations: violations, realtimeCondition: false)
+            let numberOfSeriousViolations = violations.filter({ $0.severity == .error }).count
             if !quiet {
                 Self.printStatus(
-                    violations: builder.violations,
+                    violations: violations,
                     files: files,
                     serious: numberOfSeriousViolations,
                     verb: "linting"
