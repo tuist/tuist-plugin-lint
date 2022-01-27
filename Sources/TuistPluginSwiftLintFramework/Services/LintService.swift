@@ -38,7 +38,7 @@ public final class LintService {
         let graph = try getGraph(at: path)
         let sourcesToLint = try getSourcesToLint(in: graph, targetName: targetName)
         
-        swiftLintAdapter.lint(sources: sourcesToLint)
+        swiftLintAdapter.lint(paths: sourcesToLint)
     }
     
     #warning("TODO: add unit tests")

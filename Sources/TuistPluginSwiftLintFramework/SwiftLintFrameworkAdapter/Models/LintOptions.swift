@@ -19,17 +19,4 @@ struct LintOptions {
     let configurationFiles: [String]
     let leniency: Leniency
     let quiet: Bool
-    
-    #warning("make `configurationFiles` configurable")
-    #warning("make `leniency` configurable")
-    #warning("make `quiet` configurable")
-    
-    static func create(sources: [String]) -> Self {
-        LintOptions(
-            paths: sources,
-            configurationFiles: [],
-            leniency: .default,
-            quiet: false
-        )
-    }
 }

@@ -5,14 +5,19 @@ import SwiftLintFramework
 #warning("TODO: unit tests")
 
 public protocol SwiftLintFrameworkAdapting {
-    func lint(sources: [String])
+    func lint(paths: [String])
 }
 
 public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     public init() { }
     
-    public func lint(sources: [String]) {
-        let options = LintOptions.create(sources: sources)
+    public func lint(paths: [String]) {
+        let options = LintOptions(
+            paths: paths,
+            configurationFiles: [],
+            leniency: .default,
+            quiet: false
+        )
         let builder = LintResultBuilder(options: options)
         
         do {
@@ -27,23 +32,24 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         let options = builder.options
         let visitorMutationQueue = DispatchQueue(label: "io.tuist.tuist-plugin-swiftlint.lintVisitorMutation")
         
-        let visitor = LintableFilesVisitor
-            .create(
-                options: options,
-                cache: builder.cache,
-                block: { linter in
-                    let currentViolations: [StyleViolation] = applyLeniency(
-                        options: options,
-                        violations: linter.styleViolations(using: builder.storage)
-                    )
-                    visitorMutationQueue.sync {
-                        builder.violations += currentViolations
-                    }
-                    
-                    linter.file.invalidateCache()
-                    builder.reporter.report(violations: currentViolations, realtimeCondition: true)
+        let visitor = LintableFilesVisitor(
+            paths: options.paths,
+            quiet: options.quiet,
+            cache: builder.cache,
+            block: { linter in
+                let currentViolations: [StyleViolation] = applyLeniency(
+                    options: options,
+                    violations: linter.styleViolations(using: builder.storage)
+                )
+                visitorMutationQueue.sync {
+                    builder.violations += currentViolations
                 }
-            )
+                
+                linter.file.invalidateCache()
+                builder.reporter.report(violations: currentViolations, realtimeCondition: true)
+            }
+        )
+        
         return try builder.configuration.visitLintableFiles(with: visitor, storage: builder.storage)
     }
     

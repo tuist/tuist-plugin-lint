@@ -11,22 +11,17 @@ struct LintableFilesVisitor {
     let parallel: Bool
     let block: (CollectedLinter) -> Void
 
-    static func create(
-        options: LintOptions,
+    init(
+        paths: [String],
+        quiet: Bool,
         cache: LinterCache?,
         block: @escaping (CollectedLinter) -> Void
-    ) -> LintableFilesVisitor {
-        let paths = resolveParamsFiles(args: options.paths)
-        
-        let visitor = LintableFilesVisitor(
-            paths: paths,
-            quiet: options.quiet,
-            cache: cache,
-            parallel: true,
-            block: block
-        )
-        
-        return visitor
+    ) {
+        self.paths = resolveParamsFiles(args: paths)
+        self.quiet = quiet
+        self.cache = cache
+        self.parallel = true
+        self.block = block
     }
 
     func linter(forFile file: SwiftLintFile, configuration: Configuration) -> Linter {

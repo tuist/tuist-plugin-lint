@@ -4,6 +4,11 @@ import SwiftLintFramework
 #warning("TODO: needs documentation")
 #warning("TODO: unit tests")
 
+private struct DuplicateCollector {
+    var all = Set<String>()
+    var duplicates = Set<String>()
+}
+
 extension Collection where Element == Linter {
     var duplicateFileNames: Set<String> {
         let collector = reduce(into: DuplicateCollector()) { result, linter in
