@@ -42,7 +42,7 @@ extension StyleViolation {
     }
 }
 
-extension Collection where Element == StyleViolation {
+extension Array where Element == StyleViolation {
     /// Returns a number of violations with the given severity level.
     func numberOfViolations(severity: ViolationSeverity) -> Int {
         filter { $0.severity == severity }.count
@@ -64,6 +64,16 @@ extension Collection where Element == StyleViolation {
         Done linting! Found \(count) violation\(count.pluralSuffix),
         \(numberOfSeriousViolations) serious in \(numberOfFiles) file\(numberOfFiles.pluralSuffix).
         """
+    }
+    
+    /// Generates and prints report from violations using the given reporter.
+    func report(with reporter: Reporter.Type, realtimeCondition: Bool) {
+        if reporter.isRealtime == realtimeCondition {
+            let report = reporter.generateReport(self)
+            if !report.isEmpty {
+                queuedPrint(report)
+            }
+        }
     }
 }
 
