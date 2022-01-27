@@ -22,7 +22,6 @@ struct LintOptions {
     let reporter: String?
     let quiet: Bool
     let cachePath: String?
-    let ignoreCache: Bool
     let enableAllRules: Bool
     
     #warning("make `configurationFiles` configurable")
@@ -38,7 +37,6 @@ struct LintOptions {
             reporter: nil,
             quiet: false,
             cachePath: nil,
-            ignoreCache: false,
             enableAllRules: false
         )
     }
