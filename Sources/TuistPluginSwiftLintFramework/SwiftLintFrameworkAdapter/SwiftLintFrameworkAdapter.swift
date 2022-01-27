@@ -22,17 +22,12 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         
         do {
             // Linting
-            let visitor = LintableFilesVisitor(
-                quiet: quiet,
-                cache: cache
-            )
-  
             var (files, violations) = try visitLintableFiles(
-                with: visitor,
                 paths: resolveParamsFiles(args: paths),
                 storage: storage,
                 configuration: configuration,
                 leniency: leniency,
+                quiet: quiet,
                 reporter: reporter,
                 cache: cache
             )
@@ -63,27 +58,27 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     // MARK: - Helpers - Linting
     
     private func visitLintableFiles(
-        with visitor: LintableFilesVisitor,
         paths: [String],
         storage: RuleStorage,
         configuration: Configuration,
         leniency: Leniency,
+        quiet: Bool,
         reporter: Reporter.Type,
         cache: LinterCache
     ) throws -> ([SwiftLintFile], [StyleViolation]) {
         var violations: [StyleViolation] = []
         
-        let files = try getFiles(with: visitor, paths: paths, configuration: configuration)
-        let groupedFiles = try groupFiles(files, visitor: visitor, configuration: configuration)
-        let linters = linters(for: groupedFiles, visitor: visitor, cache: cache)
-        let (collectedLinters, duplicateFileNames) = collect(linters: linters, visitor: visitor, storage: storage, duplicateFileNames: linters.duplicateFileNames, configuration: configuration)
+        let files = try getFiles(paths: paths, configuration: configuration, quiet: quiet)
+        let groupedFiles = try groupFiles(files, configuration: configuration)
+        let linters = linters(for: groupedFiles, cache: cache)
+        let (collectedLinters, duplicateFileNames) = collect(linters: linters, storage: storage, duplicateFileNames: linters.duplicateFileNames, configuration: configuration, quiet: quiet)
         
         let visitedFiles = visit(
             linters: collectedLinters,
-            visitor: visitor,
             storage: storage,
             duplicateFileNames: duplicateFileNames,
             configuration: configuration,
+            quiet: quiet,
             block: { [visitorMutationQueue] linter in
                 let currentViolations = linter
                     .styleViolations(using: storage)
@@ -101,8 +96,8 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         return (visitedFiles, violations)
     }
     
-    private func getFiles(with visitor: LintableFilesVisitor, paths: [String], configuration: Configuration) throws -> [SwiftLintFile] {
-        if !visitor.quiet {
+    private func getFiles(paths: [String], configuration: Configuration, quiet: Bool) throws -> [SwiftLintFile] {
+        if !quiet {
             let filesInfo: String
             if paths.isEmpty || paths == [""] {
                 filesInfo = "in current working directory"
@@ -120,7 +115,6 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     
     private func groupFiles(
         _ files: [SwiftLintFile],
-        visitor: LintableFilesVisitor,
         configuration: Configuration
     ) throws -> [Configuration: [SwiftLintFile]] {
         var groupedFiles = [Configuration: [SwiftLintFile]]()
@@ -147,7 +141,6 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     
     private func linters(
         for filesPerConfiguration: [Configuration: [SwiftLintFile]],
-        visitor: LintableFilesVisitor,
         cache: LinterCache
     ) -> [Linter] {
         let fileCount = filesPerConfiguration.reduce(0) { $0 + $1.value.count }
@@ -155,12 +148,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
         var linters = [Linter]()
         linters.reserveCapacity(fileCount)
         for (config, files) in filesPerConfiguration {
-            let newConfig: Configuration
-            if visitor.cache != nil {
-                newConfig = config.withPrecomputedCacheDescription()
-            } else {
-                newConfig = config
-            }
+            let newConfig = config.withPrecomputedCacheDescription()
             linters += files.map { Linter(file: $0, configuration: newConfig, cache: cache) }
         }
         
@@ -169,15 +157,15 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     
     private func collect(
         linters: [Linter],
-        visitor: LintableFilesVisitor,
         storage: RuleStorage,
         duplicateFileNames: Set<String>,
-        configuration: Configuration
+        configuration: Configuration,
+        quiet: Bool
     ) -> ([CollectedLinter], Set<String>) {
         var collected = 0
         let total = linters.filter({ $0.isCollecting }).count
         let collect = { [indexIncrementerQueue] (linter: Linter) -> CollectedLinter? in
-            if !visitor.quiet, linter.isCollecting, let filePath = linter.file.path {
+            if !quiet, linter.isCollecting, let filePath = linter.file.path {
                 let outputFilename = outputFilename(for: filePath, duplicateFileNames: duplicateFileNames, configuration: configuration)
                 let increment = {
                     collected += 1
@@ -199,15 +187,15 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     
     private func visit(
         linters: [CollectedLinter],
-        visitor: LintableFilesVisitor,
         storage: RuleStorage,
         duplicateFileNames: Set<String>,
         configuration: Configuration,
+        quiet: Bool,
         block: @escaping (CollectedLinter) -> Void
     ) -> [SwiftLintFile] {
         var visited = 0
         let visit = { [indexIncrementerQueue] (linter: CollectedLinter) -> SwiftLintFile in
-            if !visitor.quiet, let filePath = linter.file.path {
+            if !quiet, let filePath = linter.file.path {
                 let outputFilename = outputFilename(for: filePath, duplicateFileNames: duplicateFileNames, configuration: configuration)
                 let increment = {
                     visited += 1
