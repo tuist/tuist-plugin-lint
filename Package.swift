@@ -13,7 +13,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/tuist/tuist", revision: "d6b378967be3cdd80638dafd2d01b027df0591eb"), // TODO: replace "revision" with requirement for released version when `3.0` be released
+        .package(url: "https://github.com/tuist/tuist", revision: "bcb26e52238a2f33cbf92822762b3ac4085d1dcd"), // TODO: replace "revision" with requirement for released version when `3.0` be released
         .package(url: "https://github.com/realm/SwiftLint", .exact("0.46.1")), // it is a core dependency of the plugin, the version should be under control and locked
         .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "1.0.0")),
     ],
