@@ -52,11 +52,7 @@ public final class LintService {
     #warning("TODO: add unit tests")
     private func getGraph(at path: String?) throws -> Graph {
         do {
-            if let path = path {
-                return try Tuist.graph(at: path)
-            } else {
-                return try Tuist.graph()
-            }
+            return try Tuist.graph(at: path)
         } catch {
             throw LintServiceError.graphNotFound
         }
