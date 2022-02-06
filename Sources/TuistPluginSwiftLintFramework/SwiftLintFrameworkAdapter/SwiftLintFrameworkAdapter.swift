@@ -207,13 +207,3 @@ private func outputFilename(for path: String, duplicateFileNames: Set<String>, c
 
     return pathComponents.joined(separator: "/")
 }
-
-private func resolveParamsFiles(args: [String]) -> [String] {
-    return args.reduce(into: []) { (allArgs: inout [String], arg: String) -> Void in
-        if arg.hasPrefix("@"), let contents = try? String(contentsOfFile: String(arg.dropFirst())) {
-            allArgs.append(contentsOf: resolveParamsFiles(args: contents.split(separator: "\n").map(String.init)))
-        } else {
-            allArgs.append(arg)
-        }
-    }
-}
