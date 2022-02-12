@@ -4,37 +4,48 @@ A plugin that extends [Tuist](https://github.com/tuist/tuist) with [SwiftLint](h
 
 ## Install
 
-In order to tell Tuist you'd like to use SwiftLint plugin in your project:
+In order to tell Tuist you'd like to use SwiftLint plugin in your project follow the instructions that are described in [Tuist's documentation](https://docs.tuist.io/plugins/using-plugins).
 
-**1. Update your `Config.swift` manifest file with a referance to the plugin:**
+## Usage
 
-```swift
-import ProjectDescription
+The plugin provides a command for linting the Swift code of your projects by leveraging [SwiftLint](https://github.com/realm/SwiftLint). All you need to do is run the following command:
 
-let config = Config(
-    plugins: [
-        .git(url: "https://github.com/tuist/tuist-plugin-swiftlint.git", tag: "0.0.1"),
-    ]
-)
 ```
-
-You can read more about Tuist's `Config.swift` manifest file [here](https://docs.tuist.io/manifests/config).
-
-**2. Fetch the plugin:**
-
-```bash
-tuist fetch
-```
-
-You can read more about the fetch command [here](https://docs.tuist.io/commands/dependencies).
-
-**3. Run the plugin:**
-
-```bash
 tuist swiftlint
 ```
 
-You can read more about plugins [here](https://docs.tuist.io/plugins/using-plugins).
+You can lint selected target by specifing its name:
+
+```
+tuist swiftlint MyTarget
+```
+
+### Arguments
+
+| Argument   | Short  | Description  | Default  | Required  |
+|:-:|:-:|:-:|:-:|:-:|
+| `--path`  | `-p`  | The path to the directory that contains the workspace or project whose code will be linted.  |   | No  |
+|   |   |   |   |   |
+
+
+For additional help you can call:
+
+```
+tuist swiftlint --help
+```
+
+### Subcommands
+
+| Subcommand  | Description  |
+|:-|:-|
+| `tuist swiftlint version-swiftlint`  | Outputs the current version of SwiftLint.  |
+| `tuist swiftlint version`  | Outputs the current version of the plugin.  |
+
+Check the version of SwiftLint that is used by the plugin:
+
+```
+tuist swiftlint version-swiftlint
+```
 
 ## Contribute
 
