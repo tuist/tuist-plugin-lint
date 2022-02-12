@@ -9,6 +9,7 @@ struct MainCommand: ParsableCommand {
             LintCommand.self, // lints code
             VersionCommand.self, // prints version of the plugin
             VersionSwiftLintCommand.self, // prints version of SwiftLint
-        ]
+        ],
+        defaultSubcommand: LintCommand.self
     )
 }
