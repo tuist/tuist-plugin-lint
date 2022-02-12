@@ -68,7 +68,9 @@ public final class LintService {
             return target.sources
         }
         
-        return graph.allTargets.flatMap { $0.sources }
+        return graph.allTargets
+            .flatMap { $0.sources }
+            .filter { !$0.contains("\(Constants.Tuist.tuistDirectoryName)/\(Constants.Tuist.dependenciesDirectoryName)") } // filter out 3rd party dependencies
     }
 }
 
