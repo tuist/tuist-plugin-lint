@@ -1,10 +1,10 @@
-# Tuist's SwiftLint plugin
+# Tuist SwiftLint plugin
 
 A plugin that extends [Tuist](https://github.com/tuist/tuist) with [SwiftLint](https://github.com/realm/SwiftLint) functionalities.
 
 ## Install
 
-In order to tell Tuist you'd like to use SwiftLint plugin in your project follow the instructions that are described in [Tuist's documentation](https://docs.tuist.io/plugins/using-plugins).
+In order to tell Tuist you'd like to use SwiftLint plugin in your project follow the instructions that are described in [Tuist documentation](https://docs.tuist.io/plugins/using-plugins).
 
 ## Usage
 
