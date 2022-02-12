@@ -41,12 +41,6 @@ tuist swiftlint --help
 | `tuist swiftlint version-swiftlint`  | Outputs the current version of SwiftLint.  |
 | `tuist swiftlint version`  | Outputs the current version of the plugin.  |
 
-Check the version of SwiftLint that is used by the plugin:
-
-```
-tuist swiftlint version-swiftlint
-```
-
 ## Contribute
 
 To start working on the project, you can follow the steps below:
