@@ -25,8 +25,6 @@ tuist swiftlint MyTarget
 | Argument   | Short  | Description  | Default  | Required  |
 |:-:|:-:|:-:|:-:|:-:|
 | `--path`  | `-p`  | The path to the directory that contains the workspace or project whose code will be linted.  |   | No  |
-|   |   |   |   |   |
-
 
 For additional help you can call:
 
