@@ -70,7 +70,6 @@ public final class LintService {
         
         return graph.allTargets
             .flatMap { $0.sources }
-            .filter { !$0.contains("\(Constants.Tuist.tuistDirectoryName)/\(Constants.Tuist.dependenciesDirectoryName)") } // filter out 3rd party dependencies
     }
 }
 
@@ -78,6 +77,8 @@ public final class LintService {
 private extension Graph {
     /// Returns a list of targets that are included into the graph.
     var allTargets: [Target] {
-        projects.values.flatMap { $0.targets }
+        projects.values
+            .flatMap { $0.targets }
+            .filter { !$0.isExternal } // filter out 3rd party dependencies
     }
 }
