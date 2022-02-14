@@ -4,11 +4,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "tuist-plugin-swiftlint",
+    name: "tuist-plugin-lint",
     platforms: [.macOS(.v11)],
     products: [
         .executable(
-            name: "tuist-swiftlint",
+            name: "tuist-lint",
             targets: ["TuistPluginSwiftLint"]
         )
     ],

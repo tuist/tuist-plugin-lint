@@ -1,7 +1,7 @@
 import Foundation
 import ProjectAutomation
 
-enum LintServiceError: Error, CustomStringConvertible, Equatable {
+enum SwiftLintServiceError: Error, CustomStringConvertible, Equatable {
     /// Thrown when a graph can not be found at the given path.
     case graphNotFound
     
@@ -20,7 +20,7 @@ enum LintServiceError: Error, CustomStringConvertible, Equatable {
 }
 
 /// A service that manages code linting.
-public final class LintService {
+public final class SwiftLintService {
     private let swiftLintAdapter: SwiftLintFrameworkAdapting
     
     public init(
@@ -54,7 +54,7 @@ public final class LintService {
         do {
             return try Tuist.graph(at: path)
         } catch {
-            throw LintServiceError.graphNotFound
+            throw SwiftLintServiceError.graphNotFound
         }
     }
     
@@ -62,7 +62,7 @@ public final class LintService {
     private func getSourcesToLint(in graph: Graph, targetName: String?) throws -> [String] {
         if let targetName = targetName {
             guard let target = graph.allTargets.first(where: { $0.name == targetName }) else {
-                throw LintServiceError.targetNotFound(targetName: targetName)
+                throw SwiftLintServiceError.targetNotFound(targetName: targetName)
             }
             
             return target.sources

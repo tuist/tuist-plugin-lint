@@ -3,9 +3,9 @@ import TuistPluginSwiftLintFramework
 
 extension MainCommand {
     /// A command to lint the code using SwiftLint.
-    struct LintCommand: ParsableCommand {
+    struct SwiftLintCommand: ParsableCommand {
         static var configuration = CommandConfiguration(
-            commandName: "lint",
+            commandName: "swiftlint",
             abstract: "Lints the code of your projects using SwiftLint."
         )
         
@@ -22,7 +22,7 @@ extension MainCommand {
         var target: String?
         
         func run() throws {
-            try LintService()
+            try SwiftLintService()
                 .run(
                     path: path,
                     targetName: target

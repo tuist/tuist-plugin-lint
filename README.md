@@ -11,13 +11,13 @@ In order to tell Tuist you'd like to use SwiftLint plugin in your project follow
 The plugin provides a command for linting the Swift code of your projects by leveraging [SwiftLint](https://github.com/realm/SwiftLint). All you need to do is run the following command:
 
 ```
-tuist swiftlint
+tuist lint
 ```
 
 You can lint selected target by specifing its name:
 
 ```
-tuist swiftlint MyTarget
+tuist lint MyTarget
 ```
 
 ### Arguments
@@ -29,15 +29,15 @@ tuist swiftlint MyTarget
 For additional help you can call:
 
 ```
-tuist swiftlint --help
+tuist lint --help
 ```
 
 ### Subcommands
 
 | Subcommand  | Description  |
 |:-|:-|
-| `tuist swiftlint version-swiftlint`  | Outputs the current version of SwiftLint.  |
-| `tuist swiftlint version`  | Outputs the current version of the plugin.  |
+| `tuist lint version-swiftlint`  | Outputs the current version of SwiftLint.  |
+| `tuist lint version`  | Outputs the current version of the plugin.  |
 
 ## Contribute
 
