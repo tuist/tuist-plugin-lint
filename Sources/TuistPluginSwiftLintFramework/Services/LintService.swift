@@ -61,14 +61,14 @@ public final class LintService {
     #warning("TODO: add unit tests")
     private func getSourcesToLint(in graph: Graph, targetName: String?) throws -> [String] {
         if let targetName = targetName {
-            guard let target = graph.allTargets.first(where: { $0.name == targetName }) else {
+            guard let target = graph.allInternalTargets.first(where: { $0.name == targetName }) else {
                 throw LintServiceError.targetNotFound(targetName: targetName)
             }
             
             return target.sources
         }
         
-        return graph.allTargets
+        return graph.allInternalTargets
             .flatMap { $0.sources }
     }
 }
@@ -76,9 +76,9 @@ public final class LintService {
 #warning("TODO: add unit tests")
 private extension Graph {
     /// Returns a list of targets that are included into the graph and are not 3rd party dependencies.
-    var allTargets: [Target] {
+    var allInternalTargets: [Target] {
         projects.values
-            .flatMap { $0.targets }
             .filter { !$0.isExternal }
+            .flatMap { $0.targets }
     }
 }
