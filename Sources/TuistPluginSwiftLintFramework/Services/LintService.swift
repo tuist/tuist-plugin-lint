@@ -75,10 +75,10 @@ public final class LintService {
 
 #warning("TODO: add unit tests")
 private extension Graph {
-    /// Returns a list of targets that are included into the graph.
+    /// Returns a list of targets that are included into the graph and are not 3rd party dependencies.
     var allTargets: [Target] {
         projects.values
             .flatMap { $0.targets }
-            .filter { !$0.isExternal } // filter out 3rd party dependencies
+            .filter { !$0.isExternal }
     }
 }
