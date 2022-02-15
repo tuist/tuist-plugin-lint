@@ -33,6 +33,7 @@ let project = Project(
             infoPlist: "Info.plist",
             sources: "Framework/**",
             dependencies: [
+                .external(name: "Alamofire")
             ]
         ),
         Target(
