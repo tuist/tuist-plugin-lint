@@ -4,16 +4,16 @@
 import PackageDescription
 
 let package = Package(
-    name: "tuist-swiftlint",
+    name: "tuist-lint",
     platforms: [.macOS(.v11)],
     products: [
         .executable(
-            name: "tuist-swiftlint",
+            name: "tuist-lint",
             targets: ["TuistPluginSwiftLint"]
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/tuist/tuist", revision: "e71b6a8d983de8bf8346e7216ac42f934a05a7ba"), // TODO: replace "revision" with requirement for released version when `3.0` be released
+        .package(url: "https://github.com/tuist/tuist", revision: "4e3818b15031ecb6472b3430785dfaf62640b6cb"), // TODO: replace "revision" with requirement for released version when `3.0` be released
         .package(url: "https://github.com/realm/SwiftLint", .exact("0.46.1")), // it is a core dependency of the plugin, the version should be under control and locked
         .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "1.0.0")),
     ],
