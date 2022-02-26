@@ -24,7 +24,7 @@ tuist lint MyTarget
 
 | Argument   | Short  | Description  | Default  | Required  |
 |:-:|:-:|:-:|:-:|:-:|
-| `--path`  | `-p`  | The path to the directory that contains the workspace or project whose code will be linted.  |   | No  |
+| `--path`  | `-p`  | The path to the directory that contains the workspace or project whose code will be linted.  | Current directory  | No  |
 
 For additional help you can call:
 
