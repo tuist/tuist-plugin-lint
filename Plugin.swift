@@ -1,3 +1,3 @@
 import ProjectDescription
 
-let plugin = Plugin(name: "tuist-plugin-swiftlint")
+let plugin = Plugin(name: "tuist-plugin-lint")
