@@ -6,7 +6,7 @@ Please, check out guidelines: https://keepachangelog.com/en/1.0.0/
 
 ### Added
 
-- `--strict` flag that allows to upgrade warnings to serious violations (errors). [#8](https://github.com/tuist/tuist-plugin-lint/issues/8) by [@laxmorek](https://github.com/laxmorek)
+- `--strict` flag that allows to upgrade warnings to serious violations (errors). [#9](https://github.com/tuist/tuist-plugin-lint/pull/9) by [@laxmorek](https://github.com/laxmorek)
 
 ## 0.2.1
 
