@@ -22,6 +22,7 @@ extension MainCommand {
         var target: String?
         
         @Flag(
+            name: .shortAndLong
             help: "Upgrades warnings to serious violations (errors)."
         )
         var strict: Bool = false
