@@ -4,6 +4,10 @@ Please, check out guidelines: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Changed
+
+- A dependency to `SwiftLint` has been updated to `0.47.0` (was `0.46.5`). The changelog for the new version can be found [here](https://github.com/realm/SwiftLint/releases/tag/0.47.0). [#10](https://github.com/tuist/tuist-plugin-lint/pull/10) by [@laxmorek](https://github.com/laxmorek)
+
 ## 0.2.1
 
 ### Fixed
