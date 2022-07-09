@@ -21,19 +21,43 @@ extension MainCommand {
         )
         var target: String?
         
-        @Flag(
-            name: .shortAndLong,
-            help: "Upgrades warnings to serious violations (errors)."
-        )
-        var strict: Bool = false
+        @Flag(exclusivity: .exclusive)
+        var leniency: LeniencyOptions?
+
+        @Flag(help: "Keep printing to a minimum.")
+        var quiet = false
         
         func run() throws {
-            try SwiftLintService()
-                .run(
-                    path: path,
-                    targetName: target,
-                    strict: strict
-                )
+            try SwiftLintService().run(
+                path: path,
+                targetName: target,
+                leniency: leniencyStrategy(from: leniency),
+                quiet: quiet
+            )
+        }
+
+        private func leniencyStrategy(from leniencyFlags: LeniencyOptions?) -> Leniency {
+            switch leniencyFlags {
+            case nil:
+                return .`default`
+            case .strict:
+                return .strict
+            case .lenient:
+                return .lenient
+            }
+        }
+    }
+
+    enum LeniencyOptions: String, EnumerableFlag {
+        case strict, lenient
+
+        static func help(for value: LeniencyOptions) -> ArgumentHelp? {
+            switch value {
+            case .strict:
+                return "Upgrades warnings to serious violations (errors)."
+            case .lenient:
+                return "Downgrades serious violations to warnings, warning threshold is disabled."
+            }
         }
     }
 }

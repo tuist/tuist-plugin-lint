@@ -27,7 +27,13 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             let files = try getFiles(paths: paths, configuration: configuration, quiet: quiet)
             let groupedFiles = try groupFiles(files, configuration: configuration)
             let linters = linters(for: groupedFiles, cache: cache)
-            let (collectedLinters, duplicateFileNames) = collect(linters: linters, storage: storage, duplicateFileNames: linters.duplicateFileNames, configuration: configuration, quiet: quiet)
+            let (collectedLinters, duplicateFileNames) = collect(
+                linters: linters,
+                storage: storage,
+                duplicateFileNames: linters.duplicateFileNames,
+                configuration: configuration,
+                quiet: quiet
+            )
             
             let visitedFiles = visit(
                 linters: collectedLinters,
