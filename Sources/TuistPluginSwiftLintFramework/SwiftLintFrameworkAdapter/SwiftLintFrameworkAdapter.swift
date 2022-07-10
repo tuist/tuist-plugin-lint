@@ -6,6 +6,8 @@ import SwiftLintFramework
 
 public protocol SwiftLintFrameworkAdapting {
     func lint(paths: [String], configurationFiles: [String], leniency: Leniency, quiet: Bool)
+
+    func fix(paths: [String], configurationFiles: [String], quiet: Bool)
 }
 
 public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
@@ -71,6 +73,40 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             #warning("Handle errors")
         }
     }
+
+    public func fix(paths: [String], configurationFiles: [String], quiet: Bool) {
+        let configuration = Configuration(configurationFiles: configurationFiles)
+        let storage = RuleStorage()
+
+        do {
+            let files = try getFiles(paths: paths, configuration: configuration, quiet: quiet)
+            let groupedFiles = try groupFiles(files, configuration: configuration)
+            let linters = linters(for: groupedFiles, cache: nil)
+            let (collectedLinters, duplicateFileNames) = collect(linters: linters, storage: storage, duplicateFileNames: linters.duplicateFileNames, configuration: configuration, quiet: quiet)
+
+            let visitedFiles = visit(
+                linters: collectedLinters,
+                storage: storage,
+                duplicateFileNames: duplicateFileNames,
+                configuration: configuration,
+                quiet: quiet
+            ) { linter in
+                let corrections = linter.correct(using: storage)
+                if !corrections.isEmpty && !quiet {
+                    let correctionLogs = corrections.map({ $0.consoleDescription })
+                    queuedPrint(correctionLogs.joined(separator: "\n"))
+                }
+            }
+            if !quiet {
+                let pluralSuffix = { (collection: [Any]) -> String in
+                    return collection.count != 1 ? "s" : ""
+                }
+                queuedPrintError("Done inspecting \(visitedFiles.count) file\(pluralSuffix(visitedFiles)) for auto-correction!")
+            }
+        } catch {
+            #warning("Handle errors")
+        }
+    }
     
     // MARK: - Helpers - Linting
     
@@ -119,7 +155,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
     
     private func linters(
         for filesPerConfiguration: [Configuration: [SwiftLintFile]],
-        cache: LinterCache
+        cache: LinterCache?
     ) -> [Linter] {
         let fileCount = filesPerConfiguration.reduce(0) { $0 + $1.value.count }
 
