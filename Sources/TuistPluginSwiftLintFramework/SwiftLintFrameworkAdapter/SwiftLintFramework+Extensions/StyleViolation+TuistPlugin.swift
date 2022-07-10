@@ -66,13 +66,21 @@ extension Array where Element == StyleViolation {
         """
     }
     
-    /// Generates and prints report from violations using the given reporter.
-    func report(with reporter: Reporter.Type, realtimeCondition: Bool) {
-        if reporter.isRealtime == realtimeCondition {
+    /// Generates and prints report from violations using the given reporter, if the reporter is for realtime output.
+    func reportRealtime(with reporter: Reporter.Type) {
+        if reporter.isRealtime {
             let report = reporter.generateReport(self)
             if !report.isEmpty {
                 queuedPrint(report)
             }
+        }
+    }
+
+    /// Generates and prints report from violations using the given reporter, for realtime or batch output.
+    func report(with reporter: Reporter.Type) {
+        let report = reporter.generateReport(self)
+        if !report.isEmpty {
+            queuedPrint(report)
         }
     }
 }

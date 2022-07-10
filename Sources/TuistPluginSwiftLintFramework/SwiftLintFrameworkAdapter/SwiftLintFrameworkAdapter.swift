@@ -45,7 +45,7 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
                     }
                     
                     linter.file.invalidateCache()
-                    currentViolations.report(with: reporter, realtimeCondition: true)
+                    currentViolations.reportRealtime(with: reporter)
                 }
             )
             
@@ -54,10 +54,10 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
                 let thresholdViolation = StyleViolation.createThresholdViolation(threshold: warningThreshold)
                 
                 violations.append(thresholdViolation)
-                [thresholdViolation].report(with: reporter, realtimeCondition: true)
+                [thresholdViolation].reportRealtime(with: reporter)
             }
             
-            violations.report(with: reporter, realtimeCondition: false)
+            violations.report(with: reporter)
             let numberOfSeriousViolations = violations.numberOfViolations(severity: .error)
             if !quiet {
                 queuedPrintError(
