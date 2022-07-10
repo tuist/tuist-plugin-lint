@@ -34,21 +34,18 @@ public final class SwiftLintService {
     /// - Parameters:
     ///   - path: The path to the directory that contains the workspace or project whose code will be linted.
     ///   - targetName: The target to be linted. When not specified all the targets of the graph are linted.
-    ///   - strict: If `true` then warnings will be updated to serious violations (errors).
-    public func run(path: String?, targetName: String?, strict: Bool) throws {
+    ///   - leniency: Specifies how to deal with warnings and errors, updating or downgrading as necessary.
+    ///   - quiet: Keep printing to a minimum.
+    public func run(path: String?, targetName: String?, leniency: Leniency, quiet: Bool) throws {
         let graph = try getGraph(at: path)
         let sourcesToLint = try getSourcesToLint(in: graph, targetName: targetName)
         
-        let leniency: Leniency = strict ? .strict : .default
-        
         #warning("make `configurationFiles` configurable")
-        #warning("make `leniency` configurable")
-        #warning("make `quiet` configurable")
         swiftLintAdapter.lint(
             paths: sourcesToLint,
             configurationFiles: [],
             leniency: leniency,
-            quiet: false
+            quiet: quiet
         )
     }
     
