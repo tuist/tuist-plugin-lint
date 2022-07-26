@@ -86,9 +86,8 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
             queuedPrintError("Linting Swift files \(filesInfo)")
         }
 
-        // The SwiftLint CLI works out the files to lint, they can be excluded via the config file, but if you mention files to lint it will
-        // override the config. The forceExclude flag allows the config file to still apply. As the plguin always specifies the files to lint,
-        // without forceExclude being true users will be unable to exclude files via the config file.
+        // When passing a list of file to SwiftLint, the `forceExclude` flag must be set to true to exclude files that are
+        // excluded via configuration file.
         return paths.flatMap {
             configuration.lintableFiles(inPath: $0, forceExclude: true)
         }
