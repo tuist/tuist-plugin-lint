@@ -13,9 +13,9 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/tuist/ProjectAutomation", .exact("3.2.0")),
-        .package(url: "https://github.com/realm/SwiftLint", .exact("0.46.5")), // it is a core dependency of the plugin, the version should be under control and locked
-        .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "1.0.0")),
+        .package(url: "https://github.com/tuist/ProjectAutomation", .exact("3.15.0")),
+        .package(url: "https://github.com/realm/SwiftLint", .exact("0.50.3")), // it is a core dependency of the plugin, the version should be under control and locked
+        .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "1.2.0")),
     ],
     targets: [
         .executableTarget(
