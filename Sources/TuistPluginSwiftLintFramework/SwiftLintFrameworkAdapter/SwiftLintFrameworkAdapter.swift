@@ -85,9 +85,11 @@ public final class SwiftLintFrameworkAdapter: SwiftLintFrameworkAdapting {
 
             queuedPrintError("Linting Swift files \(filesInfo)")
         }
-        
+
+        // When passing a list of file to SwiftLint, the `forceExclude` flag must be set to true to exclude files that are
+        // excluded via configuration file.
         return paths.flatMap {
-            configuration.lintableFiles(inPath: $0, forceExclude: false)
+            configuration.lintableFiles(inPath: $0, forceExclude: true)
         }
     }
     
