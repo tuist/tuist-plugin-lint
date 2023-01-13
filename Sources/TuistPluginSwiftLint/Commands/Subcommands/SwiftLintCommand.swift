@@ -20,6 +20,9 @@ extension MainCommand {
             help: "The target to be linted. When not specified all the targets of the graph are linted."
         )
         var target: String?
+
+        @Flag(help: "Correct violations whenever possible.")
+        var fix = false
         
         @Flag(
             name: .shortAndLong,
@@ -32,6 +35,7 @@ extension MainCommand {
                 .run(
                     path: path,
                     targetName: target,
+                    fix: fix,
                     strict: strict
                 )
         }
