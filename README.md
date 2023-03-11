@@ -30,7 +30,7 @@ tuist lint MyTarget
 For additional help you can call:
 
 ```
-tuist lint --help
+tuist lint help
 ```
 
 ### Subcommands
